@@ -1,2 +1,2 @@
-# pacman-threejs
-PacMan game desenvolvido com Three.js - matéria CCI-36: Fundamentos de Computação Gráfica.
+## :computer: **Projeto**
+Jogo PacMan 3D, na linguagem JavaScript - com base na biblioteca [Three.js](https://threejs.org/) - desenvolvido como projeto para a matéria CCI-36: Fundamentos de Computação Gráfica.
