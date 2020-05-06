@@ -4,6 +4,7 @@ const canvasHeight = document.getElementById(id).offsetHeight;
 const webGLExists = Detector.webgl ? true : false;
 
 var renderer, scene, camera, controls, map;
+var PACMAN_RADIUS = 0.25;
 var LEVEL = 
 [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
@@ -118,6 +119,9 @@ function createMap(levelDef) {
 
       if (cell === '#') {
         object = createWallMaze();
+      } else if (cell === 'P') {
+        // object = createPacman();
+        createPacman();
       }
 
       if (object !== null) {
@@ -131,6 +135,23 @@ function createMap(levelDef) {
   map.centerY = (map.bottom + map.top) / 2;
 
   return map;
+}
+
+function createPacman() {
+  //ALTERAR AQUI
+  var pacmanGeometries = [];
+  var numFrames = 40;
+  var offset;
+  for (var i = 0; i < numFrames; i++) {
+    offset = (i / (numFrames - 1)) * Math.PI;
+    pacmanGeometries.push(new THREE.SphereGeometry(PACMAN_RADIUS, 16, 16, offset, Math.PI * 2 - offset * 2));
+    pacmanGeometries[i].rotateX(Math.PI / 2);
+  }
+
+  var pacmanMaterial = new THREE.MeshPhongMaterial({ color: 'yellow', side: THREE.DoubleSide });
+  var pacman = new THREE.Mesh(pacmanGeometries[0], pacmanMaterial);
+
+  scene.add(pacman);
 }
 
 function animateScene() {
