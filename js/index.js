@@ -3,7 +3,7 @@ const canvasWidth = document.getElementById(id).offsetWidth;
 const canvasHeight = document.getElementById(id).offsetHeight;
 const webGLExists = Detector.webgl ? true : false;
 
-var renderer, scene, camera;
+var renderer, scene, camera, controls;
 var cube;
 
 initApp();
@@ -38,6 +38,11 @@ function createPerspectiveCamera() {
   camera = new THREE.PerspectiveCamera(60, canvasWidth / canvasHeight, 0.1, 100);
   camera.position.set(-3, 3, 6);
   camera.lookAt(scene.position);
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  // controls.enablePan = false;
+  // controls.enableKeys = false;
+  // controls.enableZoom = false;
+  // controls.enableRotate = false;
 }
 
 function drawAxes(length) {
