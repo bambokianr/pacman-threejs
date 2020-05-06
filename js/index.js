@@ -25,13 +25,16 @@ function initApp() {
 function createRenderer() {
   renderer = new THREE.WebGLRenderer({antialias: true, alpha: true });
   renderer.setSize(canvasWidth, canvasHeight);
-  renderer.setClearColor(0x606060, 1); 
+  renderer.setClearColor(0x000000, 1); 
   document.getElementById(id).appendChild(renderer.domElement);
 }
 
 function createScene() {
   scene = new THREE.Scene();
-  //--- [TODO] AD LIGHT
+  // scene.add(new THREE.AmbientLight(0x888888));
+  // var light = new THREE.SpotLight('white', 0.5);
+  // light.position.set(0, 0, 50);
+  // scene.add(light);
 }
 
 function createPerspectiveCamera() {
