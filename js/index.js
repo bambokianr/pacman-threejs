@@ -73,7 +73,7 @@ function createScene() {
 
 function createPerspectiveCamera() {
   camera = new THREE.PerspectiveCamera(60, canvasWidth / canvasHeight, 0.1, 100);
-  camera.position.set(-3, 3, 20);
+  camera.position.set(0, -40, 50);
   camera.lookAt(scene.position);
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   // controls.enablePan = false;
@@ -98,7 +98,7 @@ function createWallMaze() {
 
 function createMap(levelDef) {
   var map = {};
-  map.bottom = -(levelDef.length - 1);
+  map.bottom = 1 -levelDef.length;
   map.top = 0;
   map.left = 0;
   map.right = 0;
