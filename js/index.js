@@ -143,9 +143,8 @@ function createWallMaze() {
 function createPacman(skeleton) {
   var pacmanGeometries = [];
   var numFrames = 40;
-  var mouthAngle; // mouthAngle define o ângulo de abertura da bocado pacman
   for (var i = 0; i < numFrames; i++) {
-    mouthAngle = (i / (numFrames - 1)) * Math.PI;
+    var mouthAngle = (i / (numFrames - 1)) * Math.PI;
     pacmanGeometries.push(new THREE.SphereGeometry(PACMAN_RADIUS, 40, 40, mouthAngle, Math.PI * 2 - mouthAngle * 2));
   }
 
