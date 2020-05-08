@@ -4,10 +4,13 @@ const canvasHeight = document.getElementById(id).offsetHeight;
 const webGLExists = Detector.webgl ? true : false;
 
 var frames = 0;
-var signal = 0;
+var signalPacman = 1;
+var signalGhost = 1;
 var angleMouthIdx = 0;
-var renderer, scene, camera, controls, map, pacman;
+var posYGhost = 0;
+var renderer, scene, camera, controls, map, pacman, ghost;
 var PACMAN_RADIUS = 0.4;
+var GHOST_RADIUS = PACMAN_RADIUS * 1.25;
 var LEVEL = 
 [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
@@ -53,6 +56,7 @@ function initApp() {
     drawAxes(15);
     map = createMap(LEVEL);
     pacman = createPacman(map.pacmanSkeleton);
+    ghost = createGhost(map.ghostSkeleton, 0xff0000);
     animateScene();
     
   } else if(webGLExists === false) {
@@ -98,6 +102,7 @@ function createMap(levelDef) {
   map.left = 0;
   map.right = 0;
   map.pacmanSkeleton = null;
+  map.ghostSkeleton = null;
 
   var x, y;
   for (var row = 0; row < levelDef.length; row++) {
@@ -116,6 +121,8 @@ function createMap(levelDef) {
         object = createWallMaze();
       } else if (cell === 'P') {
         map.pacmanSkeleton = new THREE.Vector3(x, y, 0);
+      } else if (cell === 'G') {
+        map.ghostSkeleton = new THREE.Vector3(x, y, 0);
       }
 
       if (object !== null) {
@@ -159,6 +166,17 @@ function createPacman(skeleton) {
   return pacman;
 }
 
+function createGhost(skeleton, color) {
+  var material = new THREE.MeshPhongMaterial({ color });
+  var geometry1 = new THREE.SphereGeometry(GHOST_RADIUS, 40, 40, 0, Math.PI);  
+  ghost = new THREE.Mesh(geometry1, material);
+
+  ghost.position.copy(skeleton); //definindo a posição do ghost no mapa
+
+  scene.add(ghost);
+  return ghost;
+}
+
 function animateMouthPacman() {
   const framesInterval = 5;
   const qtOfAngles = 10;
@@ -170,11 +188,28 @@ function animateMouthPacman() {
     pacman.geometry = pacman.frames[angleMouthIdx];
     scene.add(pacman);
     if (angleMouthIdx === 0) { //aumentando o âgulo - abrindo a boca
-      signal = 1;
+      signalPacman = 1;
     } else if (angleMouthIdx === qtOfAngles) { //fechando o âgulo - diminuindo a boca
-      signal = -1;
+      signalPacman = -1;
     }
-    angleMouthIdx += signal;
+    angleMouthIdx += signalPacman;
+  }
+}
+
+function animateFloatGhost() {
+  const framesInterval = 10;
+  const deltaY = 0.2;
+
+  if (frames % framesInterval === 0) {
+    posYGhost = Math.round((posYGhost +signalGhost*0.05) * 100) / 100;
+    scene.remove(ghost);
+    ghost.position.z = posYGhost;
+    scene.add(ghost);
+    if (posYGhost === -1*deltaY) {
+      signalGhost = 1;
+    } else if (posYGhost === deltaY) {
+      signalGhost = -1;
+    }
   }
 }
 
@@ -183,5 +218,6 @@ function animateScene() {
   
   frames += 1;
   animateMouthPacman();
+  animateFloatGhost();
   renderer.render(scene, camera);
 };
