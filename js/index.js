@@ -10,7 +10,7 @@ var angleMouthIdx = 0;
 var posYGhost = 0;
 var renderer, scene, camera, controls, map, pacman, ghost;
 var PACMAN_RADIUS = 0.4;
-var GHOST_RADIUS = PACMAN_RADIUS * 1.25;
+var GHOST_RADIUS = PACMAN_RADIUS * 1.15;
 var LEVEL = 
 [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
@@ -167,13 +167,26 @@ function createPacman(skeleton) {
 }
 
 function createGhost(skeleton, color) {
-  var material = new THREE.MeshPhongMaterial({ color });
-  var geometry1 = new THREE.SphereGeometry(GHOST_RADIUS, 40, 40, 0, Math.PI);  
-  ghost = new THREE.Mesh(geometry1, material);
+  const { x, y, z } = skeleton;
+  var heightCylinder = GHOST_RADIUS;
+  var material = new THREE.MeshPhongMaterial({ color, side: THREE.DoubleSide });
 
-  ghost.position.copy(skeleton); //definindo a posição do ghost no mapa
+  var geomSemisphere = new THREE.SphereGeometry(GHOST_RADIUS, 40, 40, 0, Math.PI);
+  var objSemisphere = new THREE.Mesh(geomSemisphere, material);
+  objSemisphere.position.x = x;
+  objSemisphere.position.y = y;
+  objSemisphere.position.z = z + heightCylinder/2;
+  
+  var geomCylinder = new THREE.CylinderGeometry(GHOST_RADIUS, GHOST_RADIUS, heightCylinder, 40);  
+  var objCylinder = new THREE.Mesh(geomCylinder, material);
+  objCylinder.rotateX(Math.PI / 2);
+  objCylinder.position.copy(skeleton);
+
+  ghost = new THREE.Group();
+  ghost.add(objSemisphere, objCylinder);
 
   scene.add(ghost);
+
   return ghost;
 }
 
