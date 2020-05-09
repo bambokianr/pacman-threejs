@@ -11,6 +11,7 @@ var posYGhost = 0;
 var renderer, scene, camera, controls, map, pacman, ghost;
 var PACMAN_RADIUS = 0.4;
 var GHOST_RADIUS = PACMAN_RADIUS * 1.15;
+var DOT_RADIUS = 0.05;
 var PACMAN_SPEED = 2;
 var UP = new THREE.Vector3(0, 0, 1);
 var LEFT = new THREE.Vector3(-1, 0, 0);
@@ -18,7 +19,9 @@ var TOP = new THREE.Vector3(0, 1, 0);
 var RIGHT = new THREE.Vector3(1, 0, 0);
 var BOTTOM = new THREE.Vector3(0, -1, 0);
 var keys;
-var delta = 0.01;
+var delta = 0.02;
+var cameraFP = true;
+var cancelChangeCamera = false;
 var LEVEL = 
 [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
@@ -90,6 +93,7 @@ function createScene() {
 }
 
 function createPerspectiveCamera() {
+  cameraFP = false;
   camera = new THREE.PerspectiveCamera(60, canvasWidth / canvasHeight, 0.1, 100);
   camera.position.set(0, -40, 50);
   camera.lookAt(scene.position);
@@ -129,6 +133,8 @@ function createMap(levelDef) {
 
       if (cell === '#') {
         object = createWallMaze();
+      } else if (cell == '.') {
+        object = createDot();
       } else if (cell === 'P') {
         map.pacmanSkeleton = new THREE.Vector3(x, y, 0);
       } else if (cell === 'G') {
@@ -241,7 +247,9 @@ function animateScene() {
   requestAnimationFrame(animateScene);
 
   frames += 1;
-  updateFirstPersonCamera();
+  if (cameraFP)
+    updateFirstPersonCamera();
+  changeCameraView();
   animateMouthPacman();
   animateFloatGhost();
   movePacman();
@@ -251,6 +259,7 @@ function animateScene() {
 /// Moita a partir daqui
 
 function createFirstPersonCamera() {
+  cameraFP = true;
   camera = new THREE.PerspectiveCamera(75, canvasWidth / canvasHeight, 0.1, 100);
   camera.up.copy(UP);
   camera.targetPosition = new THREE.Vector3();
@@ -295,10 +304,11 @@ function createKeyState() {
 
   document.body.addEventListener('keydown', onDocumentKeyDown,false);
   function onDocumentKeyDown(event) {
-      console.log(event.ketCode);
-      keyState[event.keyCode] = true;
-      keyState[String.fromCharCode(event.keyCode)] = true;
+    keyState[event.keyCode] = true;
+    keyState[String.fromCharCode(event.keyCode)] = true; 
+         
   };
+  
   document.body.addEventListener('keyup', function (event) {
       keyState[event.keyCode] = false;
       keyState[String.fromCharCode(event.keyCode)] = false;
@@ -311,4 +321,26 @@ function createKeyState() {
   });
 
   return keyState;
+}
+
+function createDot() {
+  var dotGeometry = new THREE.SphereGeometry(DOT_RADIUS);
+  var dotMaterial = new THREE.MeshPhongMaterial({ color: 0xFFDAB9 }); // Paech color
+
+  var dot = new THREE.Mesh(dotGeometry, dotMaterial);
+  return dot;
+}
+
+function changeCameraView() {
+  if (keys['C']) {
+    if (!cancelChangeCamera) {
+      if (cameraFP)
+        createPerspectiveCamera();
+      else
+        createFirstPersonCamera();
+      cancelChangeCamera = true;
+    }
+  }
+  else
+    cancelChangeCamera = false;
 }
