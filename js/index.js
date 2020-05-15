@@ -8,8 +8,9 @@ var signalPacman = 1;
 var signalGhost = 1;
 var angleMouthIdx = 0;
 var posYGhost = 0;
-var colorsGhost = [0xfa9899, 0x66feff, 0xfa9c00, 0xef0707];
 var colorWall = 0x1716a2;
+var colorsGhost = [0xfa9899, 0x66feff, 0xfa9c00, 0xef0707];
+var colorPeach = 0xfddca6;
 var renderer, scene, camera, controls, map, pacman, ghosts = [];
 var PACMAN_RADIUS = 0.4;
 var GHOST_RADIUS = PACMAN_RADIUS * 1.15;
@@ -228,7 +229,7 @@ function animateMouthPacman() {
   }
 }
 
-function animateFloatGhost() {
+function animateFloatGhost(ghost) {
   const framesInterval = 10;
   const deltaY = 0.2;
 
@@ -327,7 +328,7 @@ function createKeyState() {
 
 function createDot() {
   var dotGeometry = new THREE.SphereGeometry(DOT_RADIUS);
-  var dotMaterial = new THREE.MeshPhongMaterial({ color: 0xFFDAB9 }); // Paech color
+  var dotMaterial = new THREE.MeshPhongMaterial({ color: colorPeach }); // Paech color
 
   var dot = new THREE.Mesh(dotGeometry, dotMaterial);
   return dot;
