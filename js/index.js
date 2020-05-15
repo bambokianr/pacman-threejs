@@ -11,6 +11,17 @@ var posYGhost = 0;
 var renderer, scene, camera, controls, map, pacman, ghost;
 var PACMAN_RADIUS = 0.4;
 var GHOST_RADIUS = PACMAN_RADIUS * 1.15;
+var DOT_RADIUS = 0.05;
+var PACMAN_SPEED = 2;
+var UP = new THREE.Vector3(0, 0, 1);
+var LEFT = new THREE.Vector3(-1, 0, 0);
+var TOP = new THREE.Vector3(0, 1, 0);
+var RIGHT = new THREE.Vector3(1, 0, 0);
+var BOTTOM = new THREE.Vector3(0, -1, 0);
+var keys;
+var delta = 0.02;
+var cameraFP = true;
+var cancelChangeCamera = false;
 var LEVEL = 
 [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
@@ -52,7 +63,9 @@ function initApp() {
   if(webGLExists === true) {
     createRenderer();
     createScene();
-    createPerspectiveCamera();
+    createFirstPersonCamera();
+    //createPerspectiveCamera();
+    keys = createKeyState(); 
     drawAxes(15);
     map = createMap(LEVEL);
     pacman = createPacman(map.pacmanSkeleton);
@@ -80,6 +93,7 @@ function createScene() {
 }
 
 function createPerspectiveCamera() {
+  cameraFP = false;
   camera = new THREE.PerspectiveCamera(60, canvasWidth / canvasHeight, 0.1, 100);
   camera.position.set(0, -40, 50);
   camera.lookAt(scene.position);
@@ -119,6 +133,8 @@ function createMap(levelDef) {
 
       if (cell === '#') {
         object = createWallMaze();
+      } else if (cell == '.') {
+        object = createDot();
       } else if (cell === 'P') {
         map.pacmanSkeleton = new THREE.Vector3(x, y, 0);
       } else if (cell === 'G') {
@@ -161,6 +177,7 @@ function createPacman(skeleton) {
   //adicionando a chave frames do obj pacman todas as geometrias geradas para o pacman
   pacman.frames = pacmanGeometries;
   pacman.position.copy(skeleton); //definindo a posição do pacman no mapa
+  pacman.direction = new THREE.Vector3(-1, 0, 0);
 
   scene.add(pacman);
   return pacman;
@@ -228,9 +245,102 @@ function animateFloatGhost() {
 
 function animateScene() {
   requestAnimationFrame(animateScene);
-  
+
   frames += 1;
+  if (cameraFP)
+    updateFirstPersonCamera();
+  changeCameraView();
   animateMouthPacman();
   animateFloatGhost();
+  movePacman();
   renderer.render(scene, camera);
 };
+
+/// Moita a partir daqui
+
+function createFirstPersonCamera() {
+  cameraFP = true;
+  camera = new THREE.PerspectiveCamera(75, canvasWidth / canvasHeight, 0.1, 100);
+  camera.up.copy(UP);
+  camera.targetPosition = new THREE.Vector3();
+  camera.targetLookAt = new THREE.Vector3();
+  camera.lookAtPosition = new THREE.Vector3();
+}
+
+function updateFirstPersonCamera() {
+  camera.targetPosition.copy(pacman.position).addScaledVector(UP, 1.5).addScaledVector(pacman.direction, -1);
+  camera.targetLookAt.copy(pacman.position).add(pacman.direction);
+
+  camera.position.lerp(camera.targetPosition, 0.2);
+  camera.lookAtPosition.lerp(camera.targetLookAt, 0.2);
+  camera.lookAt(camera.lookAtPosition);
+}
+
+var _lookAt = new THREE.Vector3();
+function movePacman() {
+  pacman.up.copy(pacman.direction).applyAxisAngle(UP, -Math.PI / 2);
+  _lookAt = pacman.position.clone();
+  pacman.lookAt(_lookAt.add(UP));
+
+  //console.log(keys);
+  if (keys['W']) {
+    pacman.translateOnAxis(LEFT, PACMAN_SPEED * delta);
+    pacman.distanceMoved += PACMAN_SPEED * delta;
+  }
+  if (keys['A']) {
+    pacman.direction.applyAxisAngle(UP, Math.PI / 2 * delta);
+  }
+  if (keys['D']) {
+    pacman.direction.applyAxisAngle(UP, -Math.PI / 2 * delta);
+  }
+  if (keys['S']) {
+    pacman.translateOnAxis(LEFT, -PACMAN_SPEED * delta);
+    pacman.distanceMoved += PACMAN_SPEED * delta;
+  }
+}
+
+function createKeyState() {
+  var keyState = {};
+
+  document.body.addEventListener('keydown', onDocumentKeyDown,false);
+  function onDocumentKeyDown(event) {
+    keyState[event.keyCode] = true;
+    keyState[String.fromCharCode(event.keyCode)] = true; 
+         
+  };
+  
+  document.body.addEventListener('keyup', function (event) {
+      keyState[event.keyCode] = false;
+      keyState[String.fromCharCode(event.keyCode)] = false;
+  });
+  document.body.addEventListener('blur', function (event) {
+      for (var key in keyState) {
+          if (keyState.hasOwnProperty(key))
+              keyState[key] = false;
+      }
+  });
+
+  return keyState;
+}
+
+function createDot() {
+  var dotGeometry = new THREE.SphereGeometry(DOT_RADIUS);
+  var dotMaterial = new THREE.MeshPhongMaterial({ color: 0xFFDAB9 }); // Paech color
+
+  var dot = new THREE.Mesh(dotGeometry, dotMaterial);
+  return dot;
+}
+
+function changeCameraView() {
+  if (keys['C']) {
+    if (!cancelChangeCamera) {
+      if (cameraFP)
+        createPerspectiveCamera();
+      else
+        createFirstPersonCamera();
+      cancelChangeCamera = true;
+    }
+  }
+  else
+    cancelChangeCamera = false;
+}
