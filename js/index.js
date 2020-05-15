@@ -8,7 +8,9 @@ var signalPacman = 1;
 var signalGhost = 1;
 var angleMouthIdx = 0;
 var posYGhost = 0;
-var renderer, scene, camera, controls, map, pacman, ghost;
+var colorsGhost = [0xfa9899, 0x66feff, 0xfa9c00, 0xef0707];
+var colorWall = 0x1716a2;
+var renderer, scene, camera, controls, map, pacman, ghosts = [];
 var PACMAN_RADIUS = 0.4;
 var GHOST_RADIUS = PACMAN_RADIUS * 1.15;
 var DOT_RADIUS = 0.05;
@@ -25,7 +27,7 @@ var cancelChangeCamera = false;
 var LEVEL = 
 [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
-  '# . . . . . . . . . . . . # # . . . . . . . . . . . . #',
+  '# . . . . . . G . . . . . # # . . . . . . . . . . . . #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
   '# o # # # # . # # # # # . # # . # # # # # . # # # # o #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
@@ -42,7 +44,7 @@ var LEVEL =
   '# # # # # # . # #   #             #   # # . # # # # # #',
   '          # . # #   # # # # # # # #   # # . #          ',
   '          # . # #                     # # . #          ',
-  '          # . # #   # # # # # # # #   # # . #          ',
+  '          # . # # G # # # # # # # #   # # . #          ',
   '# # # # # # . # #   # # # # # # # #   # # . # # # # # #',
   '# . . . . . . . . . . . . # # . . . . . . . . . . . . #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
@@ -50,7 +52,7 @@ var LEVEL =
   '# o . . # # . . . . . . . .   . . . . . . . # # . . o #',
   '# # # . # # . # # . # # # # # # # # . # # . # # . # # #',
   '# # # . # # . # # . # # # # # # # # . # # . # # . # # #',
-  '# . . . . . . # # . . . . # # . . . . # # . . . . . . #',
+  '# . . . . . . # # . . . . # # . . . . # # G . . . . . #',
   '# . # # # # # # # # # # . # # . # # # # # # # # # # . #',
   '# . # # # # # # # # # # . # # . # # # # # # # # # # . #',
   '# . . . . . . . . . . . . . . . . . . . . . . . . . . #',
@@ -63,13 +65,13 @@ function initApp() {
   if(webGLExists === true) {
     createRenderer();
     createScene();
-    createFirstPersonCamera();
-    //createPerspectiveCamera();
+    // createFirstPersonCamera();
+    createPerspectiveCamera();
     keys = createKeyState(); 
     drawAxes(15);
     map = createMap(LEVEL);
     pacman = createPacman(map.pacmanSkeleton);
-    ghost = createGhost(map.ghostSkeleton, 0xff0000);
+    map.ghostsSkeleton.map((ghostSkeleton, idx) => ghosts.push(createGhost(ghostSkeleton, colorsGhost[idx])));
     animateScene();
     
   } else if(webGLExists === false) {
@@ -117,6 +119,7 @@ function createMap(levelDef) {
   map.right = 0;
   map.pacmanSkeleton = null;
   map.ghostSkeleton = null;
+  map.ghostsSkeleton = [];
 
   var x, y;
   for (var row = 0; row < levelDef.length; row++) {
@@ -138,7 +141,7 @@ function createMap(levelDef) {
       } else if (cell === 'P') {
         map.pacmanSkeleton = new THREE.Vector3(x, y, 0);
       } else if (cell === 'G') {
-        map.ghostSkeleton = new THREE.Vector3(x, y, 0);
+        map.ghostsSkeleton.push(new THREE.Vector3(x, y, 0));
       }
 
       if (object !== null) {
@@ -156,9 +159,8 @@ function createMap(levelDef) {
 
 function createWallMaze() {
   var geometry = new THREE.BoxGeometry(1, 1, 1);
-  var material = new THREE.MeshPhongMaterial({ color: 0x00ffff });
+  var material = new THREE.MeshPhongMaterial({ color: colorWall });
   var wall = new THREE.Mesh(geometry, material);
-  // wall.isWall = true;
 
   return wall;
 }
@@ -251,7 +253,7 @@ function animateScene() {
     updateFirstPersonCamera();
   changeCameraView();
   animateMouthPacman();
-  animateFloatGhost();
+  // animateFloatGhost();
   movePacman();
   renderer.render(scene, camera);
 };
