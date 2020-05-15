@@ -69,7 +69,7 @@ function initApp() {
     // createFirstPersonCamera();
     createPerspectiveCamera();
     keys = createKeyState(); 
-    drawAxes(15);
+    // drawAxes(15);
     map = createMap(LEVEL);
     pacman = createPacman(map.pacmanSkeleton);
     map.ghostsSkeleton.map((ghostSkeleton, idx) => ghosts.push(createGhost(ghostSkeleton, colorsGhost[idx])));
@@ -254,7 +254,7 @@ function animateScene() {
     updateFirstPersonCamera();
   changeCameraView();
   animateMouthPacman();
-  // animateFloatGhost();
+  ghosts.map(ghost => animateFloatGhost(ghost));
   movePacman();
   renderer.render(scene, camera);
 };
