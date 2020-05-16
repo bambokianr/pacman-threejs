@@ -21,6 +21,7 @@ var LEFT = new THREE.Vector3(-1, 0, 0);
 var TOP = new THREE.Vector3(0, 1, 0);
 var RIGHT = new THREE.Vector3(1, 0, 0);
 var BOTTOM = new THREE.Vector3(0, -1, 0);
+var _lookAt = new THREE.Vector3();
 var keys;
 var delta = 0.02;
 var cameraFP = true;
@@ -80,19 +81,19 @@ function initApp() {
   }
 }
 
-function createRenderer() {
-  renderer = new THREE.WebGLRenderer({antialias: true, alpha: true });
-  renderer.setSize(canvasWidth, canvasHeight);
-  renderer.setClearColor(0x000000, 1); 
-  document.getElementById(id).appendChild(renderer.domElement);
-}
-
 function createScene() {
   scene = new THREE.Scene();
   scene.add(new THREE.AmbientLight(0x888888));
   var light = new THREE.SpotLight('white', 0.5);
   light.position.set(0, 0, 50);
   scene.add(light);
+}
+
+function createRenderer() {
+  renderer = new THREE.WebGLRenderer({antialias: true, alpha: true });
+  renderer.setSize(canvasWidth, canvasHeight);
+  renderer.setClearColor(0x000000, 1); 
+  document.getElementById(id).appendChild(renderer.domElement);
 }
 
 function drawAxes(length) {
@@ -289,7 +290,6 @@ function animateFloatGhost(ghost) {
   }
 }
 
-var _lookAt = new THREE.Vector3();
 function movePacman() {
   pacman.up.copy(pacman.direction).applyAxisAngle(UP, -Math.PI / 2);
   _lookAt = pacman.position.clone();
