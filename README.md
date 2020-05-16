@@ -41,9 +41,13 @@ Implementação inicial para alternar entre os dois modos de visualização perm
 -- **`function createMap(levelDef)`**
 A partir de uma matriz como parâmetro de entrada é possível construir em cena os objetos sabendo suas respectivas posições.
 > '#' - representa a parede do labirinto
+
 > 'G' - representa o fantasma
+
 > 'P' - representa o pacman
+
 > '.' - representa a comida menor
+
 > 'o' - representa a comida maior
 
 Assim, é gerada a posição de cada objeto dada a sua posição na matriz e a função de criação do respectivo objeto é chamada, sendo adicionado tanto em cena quando na variável 'map' que representa a estrutura geral de dados do jogo. 
