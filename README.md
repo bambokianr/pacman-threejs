@@ -1,6 +1,6 @@
 ## :computer: **Projeto**
 Jogo PacMan 3D, na linguagem JavaScript - com base na biblioteca [Three.js](https://threejs.org/) - desenvolvido como projeto para a matéria CCI-36: Fundamentos de Computação Gráfica.
->**[introdução explicando o modelo que desejam construir, os fundamentos por trás dele e porque ele deve ser visualizado em 3D]**
+>**TODO: [introdução explicando o modelo que desejam construir, os fundamentos por trás dele e porque ele deve ser visualizado em 3D]**
 
 ![til](./pacmangif.gif)
 
