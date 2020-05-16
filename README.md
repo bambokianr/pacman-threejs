@@ -2,7 +2,7 @@
 Jogo PacMan 3D, na linguagem JavaScript - com base na biblioteca [Three.js](https://threejs.org/) - desenvolvido como projeto para a matéria CCI-36: Fundamentos de Computação Gráfica.
 >**[introdução explicando o modelo que desejam construir, os fundamentos por trás dele e porque ele deve ser visualizado em 3D]**
 
-<div style="width:360px;max-width:100%;"><div style="height:0;padding-bottom:62.5%;position:relative;"><iframe width="360" height="225" style="position:absolute;top:0;left:0;width:100%;height:100%;" frameBorder="0" src="https://imgflip.com/embed/41nezz"></iframe></div><p><a href="https://imgflip.com/gif/41nezz">via Imgflip</a></p></div>
+<a href="https://imgflip.com/gif/41nezz"></a>
 
 ### :one: Tarefa 1
 Abaixo, cada função é detalhada a fim de explicar a construção da geometria do modelo, a definição do posicionamento da câmera e a variação no tempo de animação.
