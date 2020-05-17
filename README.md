@@ -32,8 +32,10 @@ controls = new THREE.OrbitControls(camera, renderer.domElement);
 ```
 
 -- **`function createFirstPersonCamera()`**
+Adiciona uma câmera posicionada logo atrás do pacman e o acompanha nos seus movimentos de deslocamento para frente e para trás, rotação para esquerda e para direita.
 
 -- **`function updateFirstPersonCamera()`**
+Função chamada para atualizar a posição da câmera quando o pacman realiza algum movimento.
 
 -- **`function changeCameraView()`**
 Implementação inicial para alternar entre os dois modos de visualização permitidos para a cena - pressionando a tecla 'c', é possível navegar entre a câmera perspectiva e a câmera em visão primeira pessoa.
@@ -74,8 +76,10 @@ A cada 5 frames, é executada a função que adiciona na cena um novo pacman com
 A cada 10 frames, é executada a função que varia a posição em y de cada fantasma. Semelhante à animação do pacman, o objeto fantasma é removido para a inserção de um novo em uma posição acrescida ou descrescida de deltaY de position.y anterior.
 
 -- **`function movePacman()`**
+Analisa os estados das "keys" e identifica se uma das teclas W, A, S ou D está sendo pressionada e aplica um movimento (translação ou rotação em determinado sentido) de acordo com a tecla pressionada.
 
 -- **`function createKeyState()`**
+Adiciona 3 "EventListener" ao "document.body" do projeto, verificando quando uma tecla é pressionada e quando ela liberada. Retorna os estados das teclas, atribuindo "true" para teclas pressionadas e "false" para teclas não pressionadas.
 
 -- **`function animateScene()`**
 A função animateScene chama 'requestAnimationFrame', tal que assim a cada frame chama as funções que estão indicadas são re-renderizadas em cena, dando uma ideia de que a animação está acontecendo.
