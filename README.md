@@ -1,11 +1,13 @@
 ## :computer: **Projeto**
 Jogo PacMan 3D, na linguagem JavaScript - com base na biblioteca [Three.js](https://threejs.org/) - desenvolvido como projeto para a matéria CCI-36: Fundamentos de Computação Gráfica.
->**TODO: [introdução explicando o modelo que desejam construir, os fundamentos por trás dele e porque ele deve ser visualizado em 3D]**
 
 ![til](./pacmangif.gif)
 
 ### :one: Tarefa 1
-Abaixo, cada função é detalhada a fim de explicar a construção da geometria do modelo, a definição do posicionamento da câmera e a variação no tempo de animação.
+Nesta primeira parte do projeto - Tarefa 1, objetivou-se, inicialmente, familiarizar-se com a biblioteca THREE.JS e suas funcionalidades para além da linguagem JavaScript. Após isso, a fim de aplicar os conceitos aprendidos, utilizou-se o já tradicional jogo Pacman para realizarmos implementações em tópicos relacionados à disciplina de Computação Gráfica, focando principalmente na construção 3D do cenário e dos objetos, mais do que na lógica do jogo em si.
+Com isso, este trabalho, em sua primeira etapa, procurou apresentar implementações de geometrias simples como esferas, cilindros e paralelepípedos (utilizando-se, também, agrupamentos na forma de hierarquia), movimentos de objetos como translação e rotação, implementação de dois tipos de câmeras (uma câmera "livre" e uma "fixa" sobre o pacman) e, por fim, implementação de algumas interações com o usuário (movimento da câmera livre e movimento do pacman).
+
+Abaixo, cada função é detalhada tecnicamente a fim de explicar a construção da geometria do modelo, a definição do posicionamento da câmera e a variação no tempo de animação.
 
 -- **`function initApp()`**
 Verifica se é possível renderizar o projeto no browser a partir do detector `Detector.webgl`. Caso seja possível, inicializa todas as funções responsáveis pelo correto funcionamento do modelo quando a janela do browser é carregada - a partir de `window.onload = initApp()`. 
