@@ -1,4 +1,6 @@
 ## :computer: **Projeto**
+> Alunos: Gabriel Crestani e Rafaella Bambokian - COMP21
+
 Jogo PacMan 3D, na linguagem JavaScript - com base na biblioteca [Three.js](https://threejs.org/) - desenvolvido como projeto para a matéria CCI-36: Fundamentos de Computação Gráfica.
 
 ![til](./pacmangif.gif)
