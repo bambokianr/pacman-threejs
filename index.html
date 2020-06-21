@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="favicon.ico" />
     <title>3D PacMan || Three.JS</title>
-		<script src="js/dependences/three.min.js"></script>
-		<script src="js/dependences/DetectorWebGL.js"></script>
+    <script src="js/dependences/three.min.js"></script>
 		<script src="js/dependences/OrbitControls.js"></script>
+		<script src="js/dependences/DetectorWebGL.js"></script>
+		
+    <script type="module" src="https://cdn.rawgit.com/mrdoob/three.js/master/build/three.module.js"></script>
+    <script type="module" src="https://cdn.rawgit.com/mrdoob/three.js/master/examples/js/loaders/GLTFLoader.js"></script>
     <style>
 			body {
         margin: 0;
@@ -27,7 +30,8 @@
 	</head>
 	<body>
     <div id="pacman-3d">
-      <script src="js/index.js"></script>
+      <script type="module" src="js/loading.js"></script>
+      <!-- <script src="js/game.js"></script> -->
     </div>
 	</body>
 </html>
