@@ -57,7 +57,6 @@ function handleGLTGFile(gltf) {
   arcadeMesh.position.x = -15;
 }
 
-
 function animateScene() {
   requestAnimationFrame(animateScene);
 
