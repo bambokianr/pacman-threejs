@@ -145,23 +145,24 @@ function handleGLTGFile(gltf) {
 
 function createFontLoader() {
   fontLoader = new THREE.FontLoader();
-  fontLoader.load('./fonts/8-bit.json', handleFont);
+  fontLoader.load('./fonts/8-bit.json', handleEnterFont);
+  fontLoader.load('./fonts/crackman.json', handlePacmanFont);
 }
 
-function handleFont(font) {
+function handleEnterFont(font) {
   var playText = [
       new THREE.TextGeometry("press", {
-      font: font,
+      font,
       size: 10,
       height: 10
     }),
       new THREE.TextGeometry("ENTER", {
-      font: font,
+      font,
       size: 18,
       height: 10
     }),
       new THREE.TextGeometry("to start", {
-      font: font,
+      font,
       size: 10,
       height: 10
     }),
@@ -169,6 +170,7 @@ function handleFont(font) {
 
   fontMesh.push(
     new THREE.Mesh(playText[0], new THREE.MeshPhongMaterial({color: 0xffff00})),
+    // new THREE.Mesh(playText[1], new THREE.MeshPhongMaterial({color: 0xff0000})),
     new THREE.Mesh(playText[1], new THREE.ShaderMaterial({vertexShader, fragmentShader, uniforms, lights: false})),
     new THREE.Mesh(playText[2], new THREE.MeshPhongMaterial({color: 0xffff00}))
   );
@@ -176,6 +178,14 @@ function handleFont(font) {
   fontMesh[1].position.set(-25, -40, 0);
   fontMesh[2].position.set(-35, -50, 20);
   scene.add(fontMesh[0], fontMesh[1], fontMesh[2]);
+}
+
+function handlePacmanFont(font) {
+  var pacmanText = new THREE.TextGeometry("pac-man", {font, size: 10, height: 10});
+
+  fontMesh.push(new THREE.Mesh(pacmanText, new THREE.MeshPhongMaterial({color: 0x0000ff})));
+  fontMesh[3].position.set(35, -2, -5);
+  scene.add(fontMesh[3]);
 }
 
 function addEnterPressListener() {
