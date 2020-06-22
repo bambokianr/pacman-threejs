@@ -7,6 +7,28 @@ var frames = 0;
 var arcadeRotation = 'right';
 var renderer, scene, camera, controls, arcadeLoader, arcadeMesh, fontLoader, fontMesh = [];
 
+const vertexShader = `
+  void main() {
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const fragmentShader = `
+  uniform vec3 u_color;
+  uniform float u_time;
+
+  void main() {
+    gl_FragColor = vec4(0.0, cos(u_time * 0.5) + 0.5, 1.0, 1.0).rgba;
+  }
+`;
+
+const uniforms = {
+  u_time: {value: 0.0},
+  u_color: {value: new THREE.Color(0x0000FF)}
+}
+
+const clock = new THREE.Clock();
+
 window.onload = initApp();
 
 function initApp() {
@@ -89,9 +111,9 @@ function handleFont(font) {
   ];
 
   fontMesh.push(
-    new THREE.Mesh(playText[0], new THREE.MeshPhongMaterial({ color: 0xff0000 })),
-    new THREE.Mesh(playText[1], new THREE.MeshPhongMaterial({ color: 0xffff00 })),
-    new THREE.Mesh(playText[2], new THREE.MeshPhongMaterial({ color: 0xff0000 }))
+    new THREE.Mesh(playText[0], new THREE.MeshPhongMaterial({color: 0xff0000})),
+    new THREE.Mesh(playText[1], new THREE.ShaderMaterial({vertexShader, fragmentShader, uniforms})),
+    new THREE.Mesh(playText[2], new THREE.MeshPhongMaterial({color: 0xff0000}))
   );
   fontMesh[0].position.set(-110, -40, 0);
   fontMesh[1].position.set(-35, -40, 0);
@@ -103,6 +125,8 @@ function animateScene() {
   requestAnimationFrame(animateScene);
 
   frames += 1;
+  uniforms.u_time.value = clock.getElapsedTime();
+  
   if (arcadeMesh) {
     // if (arcadeMesh.rotation.y > - 0.5 && arcadeRotation === 'right') {
     //   arcadeMesh.rotation.y -= 0.01;
