@@ -187,6 +187,8 @@ function addEnterPressListener() {
 function passToNextScene(e) {
   if(e.key === 'Enter') {
     enterPressed = true;
+    while(scene.children.length > 0)  
+      scene.remove(scene.children[0]); 
     initGame();
     document.body.removeEventListener('keypress', passToNextScene);
   }
@@ -445,7 +447,6 @@ function createKeyState() {
 
   return keyState;
 }
-
 
 // /\/\/\/\/\/\/\/\  general animate scene  /\/\/\/\/\/\/\/\
 function animateScene() {
