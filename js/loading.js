@@ -46,14 +46,6 @@ function initApp() {
   }
 }
 
-function addEnterPressListener() {
-  document.getElementById(id).addEventListener('keypress', function (e) {
-    if(e.key === 'Enter') {
-      console.log('PASSAR PARA O ARQUIVO game.js');
-    }
-});
-}
-
 function createRenderer() {
   renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
   renderer.setSize(canvasWidth, canvasHeight);
@@ -76,7 +68,7 @@ function createPerspectiveCamera() {
 
 function createGLTFLoader() {
   arcadeLoader = new THREE.GLTFLoader();
-  arcadeLoader.load('./3dmodel/arcade.gltf', handleGLTGFile);
+  arcadeLoader.load('./3dmodel/scene.gltf', handleGLTGFile);
 }
 
 function handleGLTGFile(gltf) {
@@ -119,6 +111,18 @@ function handleFont(font) {
   fontMesh[1].position.set(-35, -40, 0);
   fontMesh[2].position.set(-45, -50, 20);
   scene.add(fontMesh[0], fontMesh[1], fontMesh[2]);
+}
+
+function addEnterPressListener() {
+  document.body.addEventListener('keypress', function (e) {
+    console.log("teste");
+    console.log('antes initGame', initGame);
+    if(e.key === 'Enter') {
+      initGame = true;
+      console.log('PASSAR PARA O ARQUIVO game.js');
+      console.log('depois initGame', initGame);
+    }
+  });
 }
 
 function animateScene() {
