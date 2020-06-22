@@ -126,18 +126,18 @@ function animateScene() {
 
   frames += 1;
   uniforms.u_time.value = clock.getElapsedTime();
-  
+
   if (arcadeMesh) {
-    // if (arcadeMesh.rotation.y > - 0.5 && arcadeRotation === 'right') {
-    //   arcadeMesh.rotation.y -= 0.01;
-    // } else {
-    //   arcadeRotation = 'left';
-    //   if (arcadeMesh.rotation.y < 0.5 && arcadeRotation === 'left') {
-    //     arcadeMesh.rotation.y += 0.01;
-    //   } else {
-    //     arcadeRotation = 'right';
-    //   }
-    // }
+    if (arcadeMesh.rotation.y > - 0.2 && arcadeRotation === 'right') {
+      arcadeMesh.rotation.y -= 0.005;
+    } else {
+      arcadeRotation = 'left';
+      if (arcadeMesh.rotation.y < 0.2 && arcadeRotation === 'left') {
+        arcadeMesh.rotation.y += 0.005;
+      } else {
+        arcadeRotation = 'right';
+      }
+    }
   }
   renderer.render(scene, camera);
 };
