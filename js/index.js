@@ -109,7 +109,7 @@ function initApp() {
     addEnterPressListener();
     createRenderer();
     createInitialScene();
-    // drawAxes(15);
+    // drawAxes(100);
     createInitialPerspectiveCamera();
     createGLTFLoader();
     createFontLoader();
@@ -128,7 +128,7 @@ function createInitialScene() {
 
 function createInitialPerspectiveCamera() {
   camera = new THREE.PerspectiveCamera(35, canvasWidth / canvasHeight, 0.1, 1000);
-  camera.position.set(-100, 60, 250);
+  camera.position.set(-100, 50, 270);
   camera.lookAt(scene.position);
   // controls = new THREE.OrbitControls(camera, renderer.domElement);
 }
@@ -142,7 +142,7 @@ function handleGLTGFile(gltf) {
   arcadeMesh = gltf.scene;
   arcadeMesh.children[0].material = new THREE.MeshLambertMaterial();
   scene.add(arcadeMesh);
-  arcadeMesh.position.set(-18, 0, -100);
+  arcadeMesh.position.set(2, 0, -100);
 }
 
 function createFontLoader() {
@@ -171,12 +171,12 @@ function handleFont(font) {
 
   fontMesh.push(
     new THREE.Mesh(playText[0], new THREE.MeshPhongMaterial({color: 0xff0000})),
-    new THREE.Mesh(playText[1], new THREE.ShaderMaterial({vertexShader, fragmentShader, uniforms})),
+    new THREE.Mesh(playText[1], new THREE.ShaderMaterial({vertexShader, fragmentShader, uniforms, lights: false})),
     new THREE.Mesh(playText[2], new THREE.MeshPhongMaterial({color: 0xff0000}))
   );
-  fontMesh[0].position.set(-110, -40, 0);
-  fontMesh[1].position.set(-35, -40, 0);
-  fontMesh[2].position.set(-45, -50, 20);
+  fontMesh[0].position.set(-100, -40, 0);
+  fontMesh[1].position.set(-25, -40, 0);
+  fontMesh[2].position.set(-35, -50, 20);
   scene.add(fontMesh[0], fontMesh[1], fontMesh[2]);
 }
 
