@@ -47,7 +47,7 @@ function createScene() {
 
 function createPerspectiveCamera() {
   camera = new THREE.PerspectiveCamera(35, canvasWidth / canvasHeight, 0.1, 1000);
-  camera.position.set(-170, 70, 220);
+  camera.position.set(-100, 60, 250);
   camera.lookAt(scene.position);
   // controls = new THREE.OrbitControls(camera, renderer.domElement);
 }
