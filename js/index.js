@@ -87,7 +87,6 @@ var LEVEL =
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #'
 ];
 
-
 // /\/\/\/\/\/\/\/\  general functions  /\/\/\/\/\/\/\/\
 function createRenderer() {
   renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
@@ -182,18 +181,15 @@ function handleFont(font) {
 }
 
 function addEnterPressListener() {
-  document.body.addEventListener('keypress', function (e) {
-    console.log("teste");
-    console.log('antes initGame', enterPressed);
-    if(e.key === 'Enter') {
-      enterPressed = true;
-      console.log('PASSAR PARA O ARQUIVO game.js');
-      console.log('depois initGame', enterPressed);
-      initGame();
-      // REMOVER O ADD EVENTLISTENER
-      // REMOVER A CENA
-    }
-  });
+  document.body.addEventListener('keypress', passToNextScene);
+}
+
+function passToNextScene(e) {
+  if(e.key === 'Enter') {
+    enterPressed = true;
+    initGame();
+    document.body.removeEventListener('keypress', passToNextScene);
+  }
 }
 
 // /\/\/\/\/\/\/\/\  game scene  /\/\/\/\/\/\/\/\
