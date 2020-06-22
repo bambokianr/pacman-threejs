@@ -21,7 +21,7 @@ const fragmentShader = `
   uniform float u_time;
 
   void main() {
-    gl_FragColor = vec4(0.0, cos(u_time * 0.5) + 0.5, 1.0, 1.0).rgba;
+    gl_FragColor = vec4(1.0, cos(u_time * 0.5) + 0.5, 0.0, 1.0).rgba;
   }
 `;
 const uniforms = {
@@ -52,8 +52,7 @@ var keys;
 var delta = 0.02;
 var cameraFP = true;
 var cancelChangeCamera = false;
-var LEVEL = 
-[
+var LEVEL = [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
   '# . . . . . . G . . . . . # # . . . . . . . . . . . . #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
@@ -130,7 +129,6 @@ function createInitialPerspectiveCamera() {
   camera = new THREE.PerspectiveCamera(35, canvasWidth / canvasHeight, 0.1, 1000);
   camera.position.set(-100, 50, 270);
   camera.lookAt(scene.position);
-  // controls = new THREE.OrbitControls(camera, renderer.domElement);
 }
 
 function createGLTFLoader() {
@@ -170,9 +168,9 @@ function handleFont(font) {
   ];
 
   fontMesh.push(
-    new THREE.Mesh(playText[0], new THREE.MeshPhongMaterial({color: 0xff0000})),
+    new THREE.Mesh(playText[0], new THREE.MeshPhongMaterial({color: 0xffff00})),
     new THREE.Mesh(playText[1], new THREE.ShaderMaterial({vertexShader, fragmentShader, uniforms, lights: false})),
-    new THREE.Mesh(playText[2], new THREE.MeshPhongMaterial({color: 0xff0000}))
+    new THREE.Mesh(playText[2], new THREE.MeshPhongMaterial({color: 0xffff00}))
   );
   fontMesh[0].position.set(-100, -40, 0);
   fontMesh[1].position.set(-25, -40, 0);
@@ -199,7 +197,6 @@ function initGame() {
   if(webGLExists === true) {
     createGameScene();
     // drawAxes(15);
-    // createFirstPersonCamera();
     createGamePerspectiveCamera();
     keys = createKeyState(); 
     map = createMap(LEVEL);
@@ -356,16 +353,16 @@ function createGhost(skeleton, color) {
 function createDot() {
   var dotGeometry = new THREE.SphereGeometry(DOT_RADIUS, 30, 30);
   var dotMaterial = new THREE.MeshPhongMaterial({ color: colorPeach });
-
   var dot = new THREE.Mesh(dotGeometry, dotMaterial);
+
   return dot;
 }
 
 function createBigDot() {
   var bigDotGeometry = new THREE.SphereGeometry(3*DOT_RADIUS, 30, 30);
   var gibDotMaterial = new THREE.MeshPhongMaterial({ color: colorPeach });
-
   var bigDot = new THREE.Mesh(bigDotGeometry, gibDotMaterial);
+
   return bigDot;
 }
 
