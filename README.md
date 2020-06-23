@@ -126,8 +126,7 @@ window.onload = initApp();
 
 A seguir, são descritas as novas funções adicionadas a fim de complementar o código até então implementado para cumprir com os requisitos propostos na Tarefa 2.
 
--- **`function createGLTFLoader()`** && -- **`function handleGLTGFile(gltf)`**
-
+-- **`function createGLTFLoader()`** && -- **`function handleGLTGFile(gltf)`** O loader carrega [este modelo 3D](https://sketchfab.com/3d-models/ms-pac-man-arcade-24f9ac126fb24e27b98e9dc7db4a79f9) encontrado para download em [Sketchfab](https://sketchfab.com/3d-models?features=downloadable&sort_by=-likeCount). Foi escolhido o formato glTF, uma vez que é focado na entrega do modelo em tempo de execução, é compacto para transmissão e também rápido em seu carregamento. A função callback 'handleGLTGFile' aplica o material definido, adiciona à cena e posiciona o objeto.
 
 -- **`function createFontLoader()`** && -- **`function handleEnterFont(font)`** && -- **`function handlePacmanFont(font)`**
 No primeiro método citado, `fontLoader.load` carrega as fontes em formato JSON e aciona as respectivas funções callback 'handleEnterFont' e 'handlePacmanFont', onde são definidos os textos a partir de `THREE.TextGeometry`, os materiais para os 'mesh' e o posicionamento final em cena de "press ENTER to start" e "pacman" respectivamente.
