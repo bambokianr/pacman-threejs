@@ -6,7 +6,7 @@ Jogo PacMan 3D, na linguagem JavaScript - com base na biblioteca [Three.js](http
 ![til](./pacmangif.gif)
 
 ### :one: Tarefa 1
-Nesta primeira parte do projeto - Tarefa 1, objetivou-se, inicialmente, familiarizar-se com a biblioteca THREE.JS e suas funcionalidades para além da linguagem JavaScript. Após isso, a fim de aplicar os conceitos aprendidos, utilizou-se o já tradicional jogo Pacman para realizarmos implementações em tópicos relacionados à disciplina de Computação Gráfica, focando principalmente na construção 3D do cenário e dos objetos, mais do que na lógica do jogo em si.
+Nesta primeira parte do projeto - Tarefa 1, objetivou-se, inicialmente, familiarizar-se com a biblioteca Three.js e suas funcionalidades para além da linguagem JavaScript. Após isso, a fim de aplicar os conceitos aprendidos, utilizou-se o já tradicional jogo Pacman para realizarmos implementações em tópicos relacionados à disciplina de Computação Gráfica, focando principalmente na construção 3D do cenário e dos objetos, mais do que na lógica do jogo em si.
 Com isso, este trabalho, em sua primeira etapa, procurou apresentar implementações de geometrias simples como esferas, cilindros e paralelepípedos (utilizando-se, também, agrupamentos na forma de hierarquia), movimentos de objetos como translação e rotação, implementação de dois tipos de câmeras (uma câmera "livre" e uma "fixa" sobre o pacman) e, por fim, implementação de algumas interações com o usuário (movimento da câmera livre e movimento do pacman).
 
 Abaixo, cada função é detalhada tecnicamente a fim de explicar a construção da geometria do modelo, a definição do posicionamento da câmera e a variação no tempo de animação.
@@ -87,3 +87,39 @@ Adiciona 3 "EventListener" ao "document.body" do projeto, verificando quando uma
 
 -- **`function animateScene()`**
 A função animateScene chama 'requestAnimationFrame', tal que assim a cada frame chama as funções que estão indicadas são re-renderizadas em cena, dando uma ideia de que a animação está acontecendo.
+
+### :two: Tarefa 2
+Para a segunda parte do projeto, os seguintes objetivos foram definidos:
+ - importação de modelos prontos em 3D
+ - mapeamento de texturas, a partir da definição de _wrapping_
+ - implementação de shader em GLSL, a partir da utilização de _uniforms_
+
+A fim de cumprir com os tópicos acima propostos, optou-se por criar uma tela inicial para o jogo Pacman definindo uma cena virtual realista em Three.js. Ausência de erros de geometria, noções de sombreamento, de texturas e de posicionamento adequado das fontes luz foram levados em conta e priorizados durante essa implementação.
+
+Dado o desenvolvimento da nova cena do jogo, foram necessárias alterações básicas na estrutura de renderização, agora partindo de uma simples lógica mostrada abaixo.
+```js
+function initApp() {
+  if(webGLExists === true) {
+    addEnterPressListener();
+    ...
+  }
+}
+
+function addEnterPressListener() {
+  document.body.addEventListener('keypress', passToNextScene);
+}
+
+function passToNextScene(e) {
+  if(e.key === 'Enter') {
+    enterPressed = true;
+    while(scene.children.length > 0)  
+      scene.remove(scene.children[0]); 
+    initGame();
+    document.body.removeEventListener('keypress', passToNextScene);
+  }
+}
+
+// Ao carregar a janela do navegador, a cena proposta para a tela inicial é construída
+// Caso a tecla 'Enter' seja pressionada, a cena inicial é removida e a cena do jogo é então renderizada
+window.onload = initApp();
+```
