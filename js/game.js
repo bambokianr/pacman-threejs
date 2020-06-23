@@ -3,33 +3,7 @@ const canvasWidth = document.getElementById(id).offsetWidth;
 const canvasHeight = document.getElementById(id).offsetHeight;
 const webGLExists = Detector.webgl ? true : false;
 
-var enterPressed = false;
 var frames = 0;
-var renderer, scene, camera, controls;
-
-// /\/\/\/\/\/\/\/\  initial scene  /\/\/\/\/\/\/\/\
-var arcadeRotation = 'right';
-var arcadeLoader, arcadeMesh, fontLoader, fontMesh = [];
-const clock = new THREE.Clock();
-const vertexShader = `
-  void main() {
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-const fragmentShader = `
-  uniform vec3 u_color;
-  uniform float u_time;
-
-  void main() {
-    gl_FragColor = vec4(1.0, cos(u_time * 0.5) + 0.5, 0.0, 1.0).rgba;
-  }
-`;
-const uniforms = {
-  u_time: {value: 0.0},
-  u_color: {value: new THREE.Color(0x0000FF)}
-}
-
-// /\/\/\/\/\/\/\/\  game scene  /\/\/\/\/\/\/\/\
 var colorWall = 0x1716a2;
 var colorsGhost = [0xfa9899, 0x66feff, 0xfa9c00, 0xef0707];
 var colorPeach = 0xfddca6;
@@ -37,7 +11,7 @@ var signalPacman = 1;
 var signalGhost = 1;
 var angleMouthIdx = 0;
 var posYGhost = 0;
-var map, pacman, ghosts = [];
+var renderer, scene, camera, controls, map, pacman, ghosts = [];
 var PACMAN_RADIUS = 0.4;
 var GHOST_RADIUS = PACMAN_RADIUS * 1.15;
 var DOT_RADIUS = 0.05;
@@ -52,7 +26,8 @@ var keys;
 var delta = 0.02;
 var cameraFP = true;
 var cancelChangeCamera = false;
-var LEVEL = [
+var LEVEL = 
+[
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
   '# . . . . . . G . . . . . # # . . . . . . . . . . . . #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
@@ -86,9 +61,39 @@ var LEVEL = [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #'
 ];
 
-// /\/\/\/\/\/\/\/\  general functions  /\/\/\/\/\/\/\/\
+// window.onload = initApp();
+// if (initGame === true) {
+//   initApp();
+// }
+
+function initApp() {
+  if(webGLExists === true) {
+    createRenderer();
+    createScene();
+    // drawAxes(15);
+    // createFirstPersonCamera();
+    createPerspectiveCamera();
+    keys = createKeyState(); 
+    map = createMap(LEVEL);
+    pacman = createPacman(map.pacmanSkeleton);
+    map.ghostsSkeleton.map((ghostSkeleton, idx) => ghosts.push(createGhost(ghostSkeleton, colorsGhost[idx])));
+    animateScene();
+    
+  } else if(webGLExists === false) {
+    alert("Your browser doesn't support WebGL.");
+  }
+}
+
+function createScene() {
+  scene = new THREE.Scene();
+  scene.add(new THREE.AmbientLight(0x888888));
+  var light = new THREE.SpotLight('white', 0.5);
+  light.position.set(0, 0, 50);
+  scene.add(light);
+}
+
 function createRenderer() {
-  renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
+  renderer = new THREE.WebGLRenderer({antialias: true, alpha: true });
   renderer.setSize(canvasWidth, canvasHeight);
   renderer.setClearColor(0x000000, 1); 
   document.getElementById(id).appendChild(renderer.domElement);
@@ -99,134 +104,7 @@ function drawAxes(length) {
   scene.add(axes);
 }
 
-
-window.onload = initApp();
-
-// /\/\/\/\/\/\/\/\  initial scene  /\/\/\/\/\/\/\/\
-function initApp() {
-  if(webGLExists === true) {
-    addEnterPressListener();
-    createRenderer();
-    createInitialScene();
-    // drawAxes(100);
-    createInitialPerspectiveCamera();
-    createGLTFLoader();
-    createFontLoader();
-
-    animateScene();
-  } else if(webGLExists === false) {
-    alert("Your browser doesn't support WebGL.");
-  }
-}
-
-function createInitialScene() {
-  scene = new THREE.Scene();
-  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-  scene.add(new THREE.PointLight(0xffffff, 1));
-}
-
-function createInitialPerspectiveCamera() {
-  camera = new THREE.PerspectiveCamera(35, canvasWidth / canvasHeight, 0.1, 1000);
-  camera.position.set(-100, 50, 270);
-  camera.lookAt(scene.position);
-}
-
-function createGLTFLoader() {
-  arcadeLoader = new THREE.GLTFLoader();
-  arcadeLoader.load('./3dmodel/scene.gltf', handleGLTGFile);
-}
-
-function handleGLTGFile(gltf) {
-  arcadeMesh = gltf.scene;
-  arcadeMesh.children[0].material = new THREE.MeshLambertMaterial();
-  scene.add(arcadeMesh);
-  arcadeMesh.position.set(2, 0, -100);
-}
-
-function createFontLoader() {
-  fontLoader = new THREE.FontLoader();
-  fontLoader.load('./fonts/8-bit.json', handleEnterFont);
-  fontLoader.load('./fonts/crackman.json', handlePacmanFont);
-}
-
-function handleEnterFont(font) {
-  var playText = [
-      new THREE.TextGeometry("press", {
-      font,
-      size: 10,
-      height: 10
-    }),
-      new THREE.TextGeometry("ENTER", {
-      font,
-      size: 18,
-      height: 10
-    }),
-      new THREE.TextGeometry("to start", {
-      font,
-      size: 10,
-      height: 10
-    }),
-  ];
-
-  fontMesh.push(
-    new THREE.Mesh(playText[0], new THREE.MeshPhongMaterial({color: 0xffff00})),
-    // new THREE.Mesh(playText[1], new THREE.MeshPhongMaterial({color: 0xff0000})),
-    new THREE.Mesh(playText[1], new THREE.ShaderMaterial({vertexShader, fragmentShader, uniforms, lights: false})),
-    new THREE.Mesh(playText[2], new THREE.MeshPhongMaterial({color: 0xffff00}))
-  );
-  fontMesh[0].position.set(-100, -40, 0);
-  fontMesh[1].position.set(-25, -40, 0);
-  fontMesh[2].position.set(-35, -50, 20);
-  scene.add(fontMesh[0], fontMesh[1], fontMesh[2]);
-}
-
-function handlePacmanFont(font) {
-  var pacmanText = new THREE.TextGeometry("pac-man", {font, size: 10, height: 10});
-
-  fontMesh.push(new THREE.Mesh(pacmanText, new THREE.MeshPhongMaterial({color: 0x0000ff})));
-  fontMesh[3].position.set(35, -2, -5);
-  scene.add(fontMesh[3]);
-}
-
-function addEnterPressListener() {
-  document.body.addEventListener('keypress', passToNextScene);
-}
-
-function passToNextScene(e) {
-  if(e.key === 'Enter') {
-    enterPressed = true;
-    while(scene.children.length > 0)  
-      scene.remove(scene.children[0]); 
-    initGame();
-    document.body.removeEventListener('keypress', passToNextScene);
-  }
-}
-
-// /\/\/\/\/\/\/\/\  game scene  /\/\/\/\/\/\/\/\
-function initGame() {
-  if(webGLExists === true) {
-    createGameScene();
-    // drawAxes(15);
-    createGamePerspectiveCamera();
-    keys = createKeyState(); 
-    map = createMap(LEVEL);
-    pacman = createPacman(map.pacmanSkeleton);
-    map.ghostsSkeleton.map((ghostSkeleton, idx) => ghosts.push(createGhost(ghostSkeleton, colorsGhost[idx])));
-    animateScene();
-  } else if(webGLExists === false) {
-    alert("Your browser doesn't support WebGL.");
-  }
-}
-
-function createGameScene() {
-  scene = new THREE.Scene();
-  scene.add(new THREE.AmbientLight(0x888888));
-  var light = new THREE.SpotLight('white', 0.5);
-  light.position.set(0, 0, 50);
-  scene.add(light);
-}
-
-function createGamePerspectiveCamera() {
+function createPerspectiveCamera() {
   cameraFP = false;
   camera = new THREE.PerspectiveCamera(60, canvasWidth / canvasHeight, 0.1, 100);
   camera.position.set(0, -40, 50);
@@ -246,6 +124,7 @@ function createFirstPersonCamera() {
 function updateFirstPersonCamera() {
   camera.targetPosition.copy(pacman.position).addScaledVector(UP, 1.5).addScaledVector(pacman.direction, -1);
   camera.targetLookAt.copy(pacman.position).add(pacman.direction);
+
   camera.position.lerp(camera.targetPosition, 0.2);
   camera.lookAtPosition.lerp(camera.targetLookAt, 0.2);
   camera.lookAt(camera.lookAtPosition);
@@ -254,11 +133,15 @@ function updateFirstPersonCamera() {
 function changeCameraView() {
   if (keys['C']) {
     if (!cancelChangeCamera) {
-      if (cameraFP) createPerspectiveCamera();
-      else createFirstPersonCamera();
+      if (cameraFP)
+        createPerspectiveCamera();
+      else
+        createFirstPersonCamera();
       cancelChangeCamera = true;
     }
-  } else cancelChangeCamera = false;
+  }
+  else
+    cancelChangeCamera = false;
 }
 
 function createMap(levelDef) {
@@ -352,7 +235,7 @@ function createGhost(skeleton, color) {
   objCylinder.rotateX(Math.PI / 2);
   objCylinder.position.copy(skeleton);
 
-  var ghost = new THREE.Group();
+  ghost = new THREE.Group();
   ghost.add(objSemisphere, objCylinder);
 
   scene.add(ghost);
@@ -363,16 +246,16 @@ function createGhost(skeleton, color) {
 function createDot() {
   var dotGeometry = new THREE.SphereGeometry(DOT_RADIUS, 30, 30);
   var dotMaterial = new THREE.MeshPhongMaterial({ color: colorPeach });
-  var dot = new THREE.Mesh(dotGeometry, dotMaterial);
 
+  var dot = new THREE.Mesh(dotGeometry, dotMaterial);
   return dot;
 }
 
 function createBigDot() {
   var bigDotGeometry = new THREE.SphereGeometry(3*DOT_RADIUS, 30, 30);
   var gibDotMaterial = new THREE.MeshPhongMaterial({ color: colorPeach });
-  var bigDot = new THREE.Mesh(bigDotGeometry, gibDotMaterial);
 
+  var bigDot = new THREE.Mesh(bigDotGeometry, gibDotMaterial);
   return bigDot;
 }
 
@@ -455,35 +338,15 @@ function createKeyState() {
   return keyState;
 }
 
-// /\/\/\/\/\/\/\/\  general animate scene  /\/\/\/\/\/\/\/\
 function animateScene() {
   requestAnimationFrame(animateScene);
 
   frames += 1;
-  
-  if (enterPressed === false) {
-    uniforms.u_time.value = clock.getElapsedTime();
-
-    if (arcadeMesh) {
-      if (arcadeMesh.rotation.y > - 0.2 && arcadeRotation === 'right') {
-        arcadeMesh.rotation.y -= 0.005;
-      } else {
-        arcadeRotation = 'left';
-        if (arcadeMesh.rotation.y < 0.2 && arcadeRotation === 'left') {
-          arcadeMesh.rotation.y += 0.005;
-        } else {
-          arcadeRotation = 'right';
-        }
-      }
-    }
-  } else {
-    if (cameraFP)
-      updateFirstPersonCamera();
-    changeCameraView();
-    animateMouthPacman();
-    ghosts.map(ghost => animateFloatGhost(ghost));
-    movePacman();
-  }
-
+  if (cameraFP)
+    updateFirstPersonCamera();
+  changeCameraView();
+  animateMouthPacman();
+  ghosts.map(ghost => animateFloatGhost(ghost));
+  movePacman();
   renderer.render(scene, camera);
 };
