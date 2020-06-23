@@ -123,3 +123,13 @@ function passToNextScene(e) {
 // Caso a tecla 'Enter' seja pressionada, a cena inicial é removida e a cena do jogo é então renderizada
 window.onload = initApp();
 ```
+
+A seguir, são descritas as novas funções adicionadas a fim de complementar o código até então implementado para cumprir com os requisitos propostos na Tarefa 2.
+
+-- **`function createGLTFLoader()`** && -- **`function handleGLTGFile(gltf)`**
+
+
+-- **`function createFontLoader()`** && -- **`function handleEnterFont(font)`** && -- **`function handlePacmanFont(font)`**
+No primeiro método citado, `fontLoader.load` carrega as fontes em formato JSON e aciona as respectivas funções callback 'handleEnterFont' e 'handlePacmanFont', onde são definidos os textos a partir de `THREE.TextGeometry`, os materiais para os 'mesh' e o posicionamento final em cena de "press ENTER to start" e "pacman" respectivamente.
+
+//// --- CITAR ShaderMaterial CASO SEJA REALMENTE USADO AQUI
