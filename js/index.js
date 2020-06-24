@@ -377,10 +377,48 @@ function createDot() {
   return dot;
 }
 
+function vertexShader2() {
+  return `
+    varying vec3 vUv; 
+
+    void main() {
+      vUv = position; 
+
+      vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * modelViewPosition; 
+    }
+  `
+}
+
+function fragmentShader2() {
+  return `
+      uniform vec3 colorA; 
+      uniform vec3 colorB; 
+      varying vec3 vUv;
+
+      void main() {
+        gl_FragColor = vec4(mix(colorA, colorB, vUv.z), 1.0);
+      }
+  `
+}
+
 function createBigDot() {
-  var bigDotGeometry = new THREE.SphereGeometry(3*DOT_RADIUS, 30, 30);
-  var gibDotMaterial = new THREE.MeshPhongMaterial({ color: colorPeach });
-  var bigDot = new THREE.Mesh(bigDotGeometry, gibDotMaterial);
+  let uniforms = {
+    colorB: {type: 'vec3', value: new THREE.Color(0xACB6E5)},
+    colorA: {type: 'vec3', value: new THREE.Color(0x74ebd5)}
+}
+
+  let geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
+  let material =  new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    fragmentShader: fragmentShader2(),
+    vertexShader: vertexShader2(),
+  })
+
+  let bigDot = new THREE.Mesh(geometry, material)
+  //mesh.position.x = 2
+  //scene.add(mesh)
+  //sceneObjects.push(mesh)
 
   return bigDot;
 }
