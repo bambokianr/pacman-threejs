@@ -362,17 +362,12 @@ function createGhost(skeleton, color) {
 
 function createDot() {
   var coinGeometry = new THREE.CylinderGeometry(0.25, 0.25, 0.15, 30).rotateX(Math.PI / 2);
-
   var texture = new THREE.TextureLoader().load("textures/coin_texture.jpg");
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set( 4, 4 );
   var coinMaterial = new THREE.MeshLambertMaterial({ map: texture });
-  //var dotGeometry = new THREE.SphereGeometry(DOT_RADIUS, 30, 30);
-  //var dotMaterial = new THREE.MeshPhongMaterial({ color: colorPeach });
-  var dot = new THREE.Mesh(coinGeometry, coinMaterial);
-
-  
+  var dot = new THREE.Mesh(coinGeometry, coinMaterial);  
 
   return dot;
 }
@@ -416,9 +411,6 @@ function createBigDot() {
   })
 
   let bigDot = new THREE.Mesh(geometry, material)
-  //mesh.position.x = 2
-  //scene.add(mesh)
-  //sceneObjects.push(mesh)
 
   return bigDot;
 }
