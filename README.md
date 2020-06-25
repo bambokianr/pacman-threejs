@@ -6,13 +6,9 @@ Jogo PacMan 3D, na linguagem JavaScript - com base na biblioteca [Three.js](http
 **Para acessar a demo, [clique aqui](https://bambokianr.github.io/pacman-threejs/).**
 
 ![til](./pacmangif_tarefa1.gif)
-
 _Resultado da Tarefa 1_
 
-
-
 ![til](./pacmangif_tarefa2.gif)
-
 _Resultado da Tarefa 2_
 
 
