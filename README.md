@@ -133,8 +133,8 @@ A seguir, são descritas as novas funções adicionadas a fim de complementar o 
 -- **`function createFontLoader()`** && -- **`function handleEnterFont(font)`** && -- **`function handlePacmanFont(font)`**
 No primeiro método citado, `fontLoader.load` carrega as fontes em formato JSON e aciona as respectivas funções callback 'handleEnterFont' e 'handlePacmanFont', onde são definidos os textos a partir de `THREE.TextGeometry`, os materiais para os 'mesh' e o posicionamento final em cena de "press ENTER to start" e "pacman" respectivamente.
 
--- ** function createDot() ** 
+-- **`function createDot()`** 
 Esta função foi alterada com o objetivo de introduzir um mapeamento de texturas. Primeiro, foi alterada a geometria do objeto para cilíndrica, a fim de parece mais com uma moeda. Após isso, fez-se o downlaod de uma imagem de textura e, através de THREE.RepeatWrapping, utilizou-se tal textura definindo wrapping.
 
--- ** function createBigDot() **
+-- **`function createBigDot()`**
 Mudou-se o formato do objeto para um cubo. Assim, definiu-se as functions vertexShader2() e fragmentShader2(), sendo o código GLSL escrito dentro de uma string, e a variavel uniforms para criar o objeto THREE.ShaderMaterial().
