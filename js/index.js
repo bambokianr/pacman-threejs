@@ -361,17 +361,56 @@ function createGhost(skeleton, color) {
 }
 
 function createDot() {
-  var dotGeometry = new THREE.SphereGeometry(DOT_RADIUS, 30, 30);
-  var dotMaterial = new THREE.MeshPhongMaterial({ color: colorPeach });
-  var dot = new THREE.Mesh(dotGeometry, dotMaterial);
+  var coinGeometry = new THREE.CylinderGeometry(0.25, 0.25, 0.15, 30).rotateX(Math.PI / 2);
+  var texture = new THREE.TextureLoader().load("textures/coin_texture.jpg");
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set( 4, 4 );
+  var coinMaterial = new THREE.MeshLambertMaterial({ map: texture });
+  var dot = new THREE.Mesh(coinGeometry, coinMaterial);  
 
   return dot;
 }
 
+function vertexShader2() {
+  return `
+    varying vec3 vUv; 
+
+    void main() {
+      vUv = position; 
+
+      vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * modelViewPosition; 
+    }
+  `
+}
+
+function fragmentShader2() {
+  return `
+      uniform vec3 colorA; 
+      uniform vec3 colorB; 
+      varying vec3 vUv;
+
+      void main() {
+        gl_FragColor = vec4(mix(colorA, colorB, vUv.z), 1.0);
+      }
+  `
+}
+
 function createBigDot() {
-  var bigDotGeometry = new THREE.SphereGeometry(3*DOT_RADIUS, 30, 30);
-  var gibDotMaterial = new THREE.MeshPhongMaterial({ color: colorPeach });
-  var bigDot = new THREE.Mesh(bigDotGeometry, gibDotMaterial);
+  let uniforms = {
+    colorB: {type: 'vec3', value: new THREE.Color(0xACB6E5)},
+    colorA: {type: 'vec3', value: new THREE.Color(0x74ebd5)}
+}
+
+  let geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
+  let material =  new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    fragmentShader: fragmentShader2(),
+    vertexShader: vertexShader2(),
+  })
+
+  let bigDot = new THREE.Mesh(geometry, material)
 
   return bigDot;
 }
