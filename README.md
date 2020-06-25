@@ -5,7 +5,16 @@ Jogo PacMan 3D, na linguagem JavaScript - com base na biblioteca [Three.js](http
 
 **Para acessar a demo, [clique aqui](https://bambokianr.github.io/pacman-threejs/).**
 
-![til](./pacmangif.gif)
+![til](./pacmangif_tarefa1.gif)
+
+_Resultado da Tarefa 1_
+
+
+
+![til](./pacmangif_tarefa2.gif)
+
+_Resultado da Tarefa 2_
+
 
 ### :one: Tarefa 1
 Nesta primeira parte do projeto - Tarefa 1, objetivou-se, inicialmente, familiarizar-se com a biblioteca Three.js e suas funcionalidades para além da linguagem JavaScript. Após isso, a fim de aplicar os conceitos aprendidos, utilizou-se o já tradicional jogo Pacman para realizarmos implementações em tópicos relacionados à disciplina de Computação Gráfica, focando principalmente na construção 3D do cenário e dos objetos, mais do que na lógica do jogo em si.
@@ -131,7 +140,7 @@ A seguir, são descritas as novas funções adicionadas a fim de complementar o 
 -- **`function createGLTFLoader()`** && -- **`function handleGLTGFile(gltf)`** O loader carrega [este modelo 3D](https://sketchfab.com/3d-models/ms-pac-man-arcade-24f9ac126fb24e27b98e9dc7db4a79f9) encontrado para download em [Sketchfab](https://sketchfab.com/3d-models?features=downloadable&sort_by=-likeCount). Foi escolhido o formato glTF, uma vez que é focado na entrega do modelo em tempo de execução, é compacto para transmissão e também rápido em seu carregamento. A função callback 'handleGLTGFile' aplica o material definido, adiciona à cena e posiciona o objeto.
 
 -- **`function createFontLoader()`** && -- **`function handleEnterFont(font)`** && -- **`function handlePacmanFont(font)`**
-No primeiro método citado, `fontLoader.load` carrega as fontes em formato JSON e aciona as respectivas funções callback 'handleEnterFont' e 'handlePacmanFont', onde são definidos os textos a partir de `THREE.TextGeometry`, os materiais para os 'mesh' e o posicionamento final em cena de "press ENTER to start" e "pacman" respectivamente. Observa-se que o 'mesh material' para o "ENTER" é aplicado ShaderMaterial a partir das funções vertexShader e fragmentShader.
+No primeiro método citado, `fontLoader.load` carrega as fontes em formato JSON e aciona as respectivas funções callback 'handleEnterFont' e 'handlePacmanFont', onde são definidos os textos a partir de `THREE.TextGeometry`, os materiais para os 'mesh' e o posicionamento final em cena de "press ENTER to start" e "pacman" respectivamente.
 
 -- **`function createDot()`** 
 Esta função foi alterada com o objetivo de introduzir um mapeamento de texturas. Primeiro, foi alterada a geometria do objeto para cilíndrica, a fim de parece mais com uma moeda. Após isso, fez-se o downlaod de uma imagem de textura e, através de THREE.RepeatWrapping, utilizou-se tal textura definindo wrapping.
