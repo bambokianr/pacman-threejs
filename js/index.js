@@ -260,6 +260,7 @@ function createGamePerspectiveCamera() {
   camera.position.set(0, -40, 50);
   camera.lookAt(scene.position);
   controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableRotate = false;
 }
 
 function createFirstPersonCamera() {
