@@ -280,7 +280,8 @@ function createMap(levelDef) {
     map.right = Math.max(map.right, length);
 
     for (var column = 0; column < levelDef[row].length; column += 2) {
-      x = Math.floor(column / 2) + (2 - levelDef.length/2);
+      x = Math.floor(column / 2);
+      // x = Math.floor(column / 2) + (2 - levelDef.length/2);
       var cell = levelDef[row][column];
       var object = null;
 
@@ -309,10 +310,24 @@ function createMap(levelDef) {
   return map;
 }
 
+function getPositionAtMap(map, pos) {
+  var x = Math.round(pos.x);
+  var y = Math.round(pos.y);
+
+  return map[y] && map[y][x];
+}
+
+function isWall(map, pos) {
+  var cell = getPositionAtMap(map, pos);
+
+  return cell && cell.isWall === true; 
+}
+
 function createWallMaze() {
   var geometry = new THREE.BoxGeometry(1, 1, 1);
   var material = new THREE.MeshPhongMaterial({ color: colorWall });
   var wall = new THREE.Mesh(geometry, material);
+  wall.isWall = true;
 
   return wall;
 }
@@ -468,6 +483,20 @@ function movePacman() {
     pacman.translateOnAxis(LEFT, -PACMAN_SPEED * delta);
     pacman.distanceMoved += PACMAN_SPEED * delta;
   }
+
+  var leftSide = pacman.position.clone().addScaledVector(LEFT, PACMAN_RADIUS).round();
+  var topSide = pacman.position.clone().addScaledVector(TOP, PACMAN_RADIUS).round();
+  var rightSide = pacman.position.clone().addScaledVector(RIGHT, PACMAN_RADIUS).round();
+  var bottomSide = pacman.position.clone().addScaledVector(BOTTOM, PACMAN_RADIUS).round();
+
+  if (isWall(map, leftSide)) 
+    pacman.position.x = leftSide.x + 0.5 + PACMAN_RADIUS;
+  if (isWall(map, rightSide)) 
+    pacman.position.x = rightSide.x - 0.5 - PACMAN_RADIUS;
+  if (isWall(map, topSide)) 
+    pacman.position.y = topSide.y - 0.5 - PACMAN_RADIUS;
+  if (isWall(map, bottomSide)) 
+    pacman.position.y = bottomSide.y + 0.5 + PACMAN_RADIUS;
 }
 
 function createKeyState() {
