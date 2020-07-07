@@ -38,7 +38,7 @@ const vertexShaderBigDot = `
   }
 `;
 const fragmentShaderBigDot = `
-    uniform vec3 colorA; 
+  uniform vec3 colorA; 
   uniform vec3 colorB; 
   varying vec3 vUv;
 
