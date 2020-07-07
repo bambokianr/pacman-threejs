@@ -75,6 +75,7 @@ var delta = 0.02;
 var cameraFP = true;
 var cancelChangeCamera = false;
 var lifesCounter = 3;
+var gameScore = 0;
 var numDotsEaten = 0;
 var LEVEL = [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
@@ -242,6 +243,7 @@ function initGame() {
     pacman = createPacman(map.pacmanSkeleton);
     map.ghostsSkeleton.map((ghostSkeleton, idx) => ghosts.push(createGhost(ghostSkeleton, colorsGhost[idx])));
     createLifesCounter();
+    createGameScore();
     animateScene();
   } else if(webGLExists === false) {
     alert("Your browser doesn't support WebGL.");
@@ -290,6 +292,17 @@ function changeCameraView() {
       cancelChangeCamera = true;
     }
   } else cancelChangeCamera = false;
+}
+
+function createGameScore() {
+  var gameScoreContainer = document.getElementById('game-score');
+  var gameScoreText = document.createElement('span');
+  gameScoreText.innerHTML = "GAME SCORE";
+  gameScoreContainer.appendChild(gameScoreText);
+  var gameScoreValue = document.createElement('span');
+  gameScoreValue.className = 'score';
+  gameScoreValue.innerHTML = gameScore;
+  gameScoreContainer.appendChild(gameScoreValue);
 }
 
 function createLifesCounter() {
