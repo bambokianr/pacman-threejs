@@ -282,7 +282,7 @@ function updateFirstPersonCamera() {
 function changeCameraView() {
   if (keys['C']) {
     if (!cancelChangeCamera) {
-      if (cameraFP) createPerspectiveCamera();
+      if (cameraFP) createGamePerspectiveCamera();
       else createFirstPersonCamera();
       cancelChangeCamera = true;
     }
