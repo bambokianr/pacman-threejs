@@ -143,3 +143,33 @@ Esta função foi alterada com o objetivo de introduzir um mapeamento de textura
 
 -- **`function createBigDot()`**
 Mudou-se o formato do objeto para um cubo. Assim, definiu-se as functions vertexShader2() (aqui calcula-se onde os pontos do nosso mesh deverão ser colocados) e fragmentShader2() (função que será aplicada em cada fragmento do mesh para colori-los), sendo o código GLSL escrito dentro de uma string, e a variavel uniforms para criar o objeto THREE.ShaderMaterial().
+
+### :three: Tarefa 3
+// Comentando as funções já escritas
+-- **`function fixObjectLimit(obj, map)`** 
+Trata o limite da posição de um objeto caso ele ultrapasse a área do mapa. Assim como no jogo oficial do PacMan, a lógica do código faz com que o objeto em questão apareça do lado oposto exatamente no mesmo eixo da posição em que saiu de uma extremidade do mapa. 
+Na função `animateScene` (re-renderização em cena dos métodos indicados a cada frame), `fixObjectLimit` é chamado para verificar se na cena algum objeto com propriedade `isWrapper` está fora dos limites definidos pelo mapa - a partir do código abaixo.
+```js
+function animateScene() {
+  requestAnimationFrame(animateScene);
+  
+  //... alguns códigos omitidos 
+
+  scene.children.forEach(obj => {
+    if (obj.isWrapper === true)
+      fixObjectLimit(obj, map);
+  });
+
+  renderer.render(scene, camera);
+};
+```
+Obs: A propriedade `isWrapper` foi adicionada tanto ao 'pacman' quanto aos 'ghosts' - permite verificar se o objeto em questão pode ser mapeado pela função `fixObjectLimit`.
+
+-- **`function getObjAtMap(map, pos)`** 
+Retorna o objeto no mapa `map`, representado na posição `[y][x] = [Math.round(pos.y)][Math.round(pos.x)]`.
+
+-- **`function isWall(map, pos)`** 
+Verifica se a posição `pos` como argumento é válida no mapa e retorna o objeto correpondente a partir da função `getObjAtMap`. Assim, é possível avaliar se o objeto `obj` é uma 'WallMaze' ao verificar a propriedade `obj.isWall`.
+
+-- **`function removeObjAtMap(map, pos)`** 
+A partir do atributo `pos`, torna a propriedade `visible = false` do objeto no mapa para essa posição. 

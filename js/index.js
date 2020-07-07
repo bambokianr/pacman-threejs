@@ -90,7 +90,7 @@ var LEVEL = [
   '          # . # #         G           # # . #          ',
   '          # . # #   # # # # # # # #   # # . #          ',
   '# # # # # # . # #   #             #   # # . # # # # # #',
-  '            .       #             #       .            ',
+  '            P       #             #       .            ',
   '# # # # # # . # #   #             #   # # . # # # # # #',
   '          # . # #   # # # # # # # #   # # . #          ',
   '          # . # #                     # # . #          ',
@@ -99,7 +99,7 @@ var LEVEL = [
   '# . . . . . . . . . . . . # # . . . . . . . . . . . . #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
-  '# o . . # # . . . . . . . P   . . . . . . . # # . . o #',
+  '# o . . # # . . . . . . . .   . . . . . . . # # . . o #',
   '# # # . # # . # # . # # # # # # # # . # # . # # . # # #',
   '# # # . # # . # # . # # # # # # # # . # # . # # . # # #',
   '# . . . . . . # # . . . . # # . . . . # # G . . . . . #',
@@ -339,18 +339,38 @@ function createMap(levelDef) {
   return map;
 }
 
-function getPositionAtMap(map, pos) {
+function fixObjectLimit(obj, map) {
+  if (obj.position.x < map.left)
+    obj.position.x = map.right;
+  else if (obj.position.x > map.right)
+    obj.position.x = map.left;
+
+  if (obj.position.y > map.top)
+    obj.position.y = map.bottom;
+  else if (obj.position.y < map.bottom)
+    obj.position.y = map.top;
+}
+
+var wrapObject = function (object, map) {
+  if (object.position.x < map.left)
+      object.position.x = map.right;
+  else if (object.position.x > map.right)
+      object.position.x = map.left;
+
+  if (object.position.y > map.top)
+      object.position.y = map.bottom;
+  else if (object.position.y < map.bottom)
+      object.position.y = map.top;
+};
+
+function getObjAtMap(map, pos) {
   var x = Math.round(pos.x);
   var y = Math.round(pos.y);
+
   return map[y] && map[y][x];
 }
 
-function isWall(map, pos) {
-  var cell = getPositionAtMap(map, pos);
-  return cell && cell.isWall === true; 
-}
-
-function removePositionAtMap(map, pos) {
+function removeObjAtMap(map, pos) {
   var x = Math.round(pos.x);
   var y = Math.round(pos.y);
 
@@ -367,6 +387,12 @@ function createWallMaze() {
   return wall;
 }
 
+function isWall(map, pos) {
+  var obj = getObjAtMap(map, pos);
+  // console.log('obj', obj);
+  return obj && obj.isWall === true; 
+}
+
 function createPacman(skeleton) {
   var pacmanGeometries = [];
   var numFrames = 40;
@@ -377,10 +403,12 @@ function createPacman(skeleton) {
 
   var pacmanMaterial = new THREE.MeshPhongMaterial({ color: 0xffff00, side: THREE.DoubleSide });
   pacman = new THREE.Mesh(pacmanGeometries[10], pacmanMaterial);
-
+  
   pacman.frames = pacmanGeometries;
   pacman.position.copy(skeleton);
   pacman.direction = new THREE.Vector3(-1, 0, 0);
+  
+  pacman.isWrapper = true;
 
   scene.add(pacman);
   return pacman;
@@ -404,6 +432,8 @@ function createGhost(skeleton, color) {
 
   var ghost = new THREE.Group();
   ghost.add(objSemisphere, objCylinder);
+
+  ghost.isWrapper = true;
 
   scene.add(ghost);
 
@@ -490,6 +520,7 @@ function movePacman() {
     pacman.distanceMoved += PACMAN_SPEED * delta;
   }
 
+  // [TODO] - explicar essa parte no README.md
   var leftSide = pacman.position.clone().addScaledVector(LEFT, PACMAN_RADIUS).round();
   var topSide = pacman.position.clone().addScaledVector(TOP, PACMAN_RADIUS).round();
   var rightSide = pacman.position.clone().addScaledVector(RIGHT, PACMAN_RADIUS).round();
@@ -504,14 +535,14 @@ function movePacman() {
   if (isWall(map, bottomSide)) 
     pacman.position.y = bottomSide.y + 0.5 + PACMAN_RADIUS;
 
-  var cell = getPositionAtMap(map, pacman.position);
-  if (cell && cell.isDot === true && cell.visible === true) {
-    removePositionAtMap(map, pacman.position);
+  var obj = getObjAtMap(map, pacman.position);
+  if (obj && obj.isDot === true && obj.visible === true) {
+    removeObjAtMap(map, pacman.position);
     numDotsEaten += 1;
   }
   // pacman.atePellet = false;
-  if (cell && cell.isBigDot === true && cell.visible === true) {
-    removePositionAtMap(map, pacman.position);
+  if (obj && obj.isBigDot === true && obj.visible === true) {
+    removeObjAtMap(map, pacman.position);
     // pacman.atePellet = true;
   }
 }
@@ -568,6 +599,11 @@ function animateScene() {
     animateMouthPacman();
     ghosts.map(ghost => animateFloatGhost(ghost));
     movePacman();
+
+    scene.children.forEach(obj => {
+      if (obj.isWrapper === true)
+        fixObjectLimit(obj, map);
+    });
   }
 
   renderer.render(scene, camera);
