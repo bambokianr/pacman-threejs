@@ -74,6 +74,7 @@ var keys;
 var delta = 0.02;
 var cameraFP = true;
 var cancelChangeCamera = false;
+var numDotsEaten = 0;
 var LEVEL = [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
   '# . . . . . . G . . . . . # # . . . . . . . . . . . . #',
@@ -340,14 +341,20 @@ function createMap(levelDef) {
 function getPositionAtMap(map, pos) {
   var x = Math.round(pos.x);
   var y = Math.round(pos.y);
-
   return map[y] && map[y][x];
 }
 
 function isWall(map, pos) {
   var cell = getPositionAtMap(map, pos);
-
   return cell && cell.isWall === true; 
+}
+
+function removePositionAtMap(map, pos) {
+  var x = Math.round(pos.x);
+  var y = Math.round(pos.y);
+
+  if (map[y] && map[y][x]) 
+    map[y][x].visible = false;
 }
 
 function createWallMaze() {
@@ -409,20 +416,21 @@ function createDot() {
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set( 4, 4 );
   var coinMaterial = new THREE.MeshLambertMaterial({ map: texture });
-  var dot = new THREE.Mesh(coinGeometry, coinMaterial);  
+  var dot = new THREE.Mesh(coinGeometry, coinMaterial);
+  dot.isDot = true;
 
   return dot;
 }
 
 function createBigDot() {
-  let geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
+  let geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
   let material =  new THREE.ShaderMaterial({
     vertexShader: vertexShaderBigDot,
     fragmentShader: fragmentShaderBigDot,
     uniforms: uniformsBigDot,
-  })
-
-  let bigDot = new THREE.Mesh(geometry, material)
+  });
+  let bigDot = new THREE.Mesh(geometry, material);
+  bigDot.isBigDot = true;
 
   return bigDot;
 }
@@ -494,6 +502,17 @@ function movePacman() {
     pacman.position.y = topSide.y - 0.5 - PACMAN_RADIUS;
   if (isWall(map, bottomSide)) 
     pacman.position.y = bottomSide.y + 0.5 + PACMAN_RADIUS;
+
+  var cell = getPositionAtMap(map, pacman.position);
+  if (cell && cell.isDot === true && cell.visible === true) {
+    removePositionAtMap(map, pacman.position);
+    numDotsEaten += 1;
+  }
+  // pacman.atePellet = false;
+  if (cell && cell.isBigDot === true && cell.visible === true) {
+    removePositionAtMap(map, pacman.position);
+    // pacman.atePellet = true;
+  }
 }
 
 function createKeyState() {
