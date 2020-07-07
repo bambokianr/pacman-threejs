@@ -11,12 +11,12 @@ var renderer, scene, camera, controls;
 var arcadeRotation = 'right';
 var arcadeLoader, arcadeMesh, fontLoader, fontMesh = [];
 const clock = new THREE.Clock();
-const vertexShader = `
+const vertexShaderEnter = `
   void main() {
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
-const fragmentShader = `
+const fragmentShaderEnter = `
   uniform vec3 u_color;
   uniform float u_time;
 
@@ -24,9 +24,31 @@ const fragmentShader = `
     gl_FragColor = vec4(1.0, cos(u_time * 0.5) + 0.5, 0.0, 1.0).rgba;
   }
 `;
-const uniforms = {
+const uniformsEnter = {
   u_time: {value: 0.0},
   u_color: {value: new THREE.Color(0x0000FF)}
+}
+const vertexShaderBigDot = `
+  varying vec3 vUv; 
+
+  void main() {
+    vUv = position; 
+    vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * modelViewPosition; 
+  }
+`;
+const fragmentShaderBigDot = `
+    uniform vec3 colorA; 
+  uniform vec3 colorB; 
+  varying vec3 vUv;
+
+  void main() {
+    gl_FragColor = vec4(mix(colorA, colorB, vUv.z), 1.0);
+  }
+`;
+const uniformsBigDot = {
+  colorB: {type: 'vec3', value: new THREE.Color(0xACB6E5)},
+  colorA: {type: 'vec3', value: new THREE.Color(0x74ebd5)}
 }
 
 // /\/\/\/\/\/\/\/\  game scene  /\/\/\/\/\/\/\/\
@@ -67,7 +89,7 @@ var LEVEL = [
   '          # . # #         G           # # . #          ',
   '          # . # #   # # # # # # # #   # # . #          ',
   '# # # # # # . # #   #             #   # # . # # # # # #',
-  '            .       #     P       #       .            ',
+  '            .       #             #       .            ',
   '# # # # # # . # #   #             #   # # . # # # # # #',
   '          # . # #   # # # # # # # #   # # . #          ',
   '          # . # #                     # # . #          ',
@@ -76,7 +98,7 @@ var LEVEL = [
   '# . . . . . . . . . . . . # # . . . . . . . . . . . . #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
-  '# o . . # # . . . . . . . .   . . . . . . . # # . . o #',
+  '# o . . # # . . . . . . . P   . . . . . . . # # . . o #',
   '# # # . # # . # # . # # # # # # # # . # # . # # . # # #',
   '# # # . # # . # # . # # # # # # # # . # # . # # . # # #',
   '# . . . . . . # # . . . . # # . . . . # # G . . . . . #',
@@ -171,7 +193,12 @@ function handleEnterFont(font) {
   fontMesh.push(
     new THREE.Mesh(playText[0], new THREE.MeshPhongMaterial({color: 0xffff00})),
     // new THREE.Mesh(playText[1], new THREE.MeshPhongMaterial({color: 0xff0000})),
-    new THREE.Mesh(playText[1], new THREE.ShaderMaterial({vertexShader, fragmentShader, uniforms, lights: false})),
+    new THREE.Mesh(playText[1], new THREE.ShaderMaterial({
+      vertexShader: vertexShaderEnter, 
+      fragmentShader: fragmentShaderEnter,
+      uniforms: uniformsEnter, 
+      lights: false
+    })),
     new THREE.Mesh(playText[2], new THREE.MeshPhongMaterial({color: 0xffff00}))
   );
   fontMesh[0].position.set(-100, -40, 0);
@@ -387,42 +414,12 @@ function createDot() {
   return dot;
 }
 
-function vertexShader2() {
-  return `
-    varying vec3 vUv; 
-
-    void main() {
-      vUv = position; 
-
-      vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
-      gl_Position = projectionMatrix * modelViewPosition; 
-    }
-  `
-}
-
-function fragmentShader2() {
-  return `
-      uniform vec3 colorA; 
-      uniform vec3 colorB; 
-      varying vec3 vUv;
-
-      void main() {
-        gl_FragColor = vec4(mix(colorA, colorB, vUv.z), 1.0);
-      }
-  `
-}
-
 function createBigDot() {
-  let uniforms = {
-    colorB: {type: 'vec3', value: new THREE.Color(0xACB6E5)},
-    colorA: {type: 'vec3', value: new THREE.Color(0x74ebd5)}
-}
-
   let geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
   let material =  new THREE.ShaderMaterial({
-    uniforms: uniforms,
-    fragmentShader: fragmentShader2(),
-    vertexShader: vertexShader2(),
+    vertexShader: vertexShaderBigDot,
+    fragmentShader: fragmentShaderBigDot,
+    uniforms: uniformsBigDot,
   })
 
   let bigDot = new THREE.Mesh(geometry, material)
@@ -530,7 +527,7 @@ function animateScene() {
   frames += 1;
   
   if (enterPressed === false) {
-    uniforms.u_time.value = clock.getElapsedTime();
+    uniformsEnter.u_time.value = clock.getElapsedTime();
 
     if (arcadeMesh) {
       if (arcadeMesh.rotation.y > - 0.2 && arcadeRotation === 'right') {
