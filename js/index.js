@@ -176,17 +176,17 @@ function createFontLoader() {
 
 function handleEnterFont(font) {
   var playText = [
-      new THREE.TextGeometry("press", {
+    new THREE.TextGeometry("press", {
       font,
       size: 10,
       height: 10
     }),
-      new THREE.TextGeometry("ENTER", {
+    new THREE.TextGeometry("ENTER", {
       font,
       size: 18,
       height: 10
     }),
-      new THREE.TextGeometry("to start", {
+    new THREE.TextGeometry("to start", {
       font,
       size: 10,
       height: 10
@@ -195,7 +195,6 @@ function handleEnterFont(font) {
 
   fontMesh.push(
     new THREE.Mesh(playText[0], new THREE.MeshPhongMaterial({color: 0xffff00})),
-    // new THREE.Mesh(playText[1], new THREE.MeshPhongMaterial({color: 0xff0000})),
     new THREE.Mesh(playText[1], new THREE.ShaderMaterial({
       vertexShader: vertexShaderEnter, 
       fragmentShader: fragmentShaderEnter,
@@ -330,39 +329,41 @@ function updateLifesCounter() {
 
 function createMap(levelDef) {
   var map = {};
-  map.bottom = 1 -levelDef.length;
+  map.bottom = 1 - levelDef.length;
   map.top = 0;
   map.left = 0;
   map.right = 0;
+  map.numDots = 0;
   map.pacmanSkeleton = null;
   map.ghostSkeleton = null;
   map.ghostsSkeleton = [];
 
   var x, y;
   for (var row = 0; row < levelDef.length; row++) {
-    y = -row + (levelDef.length-3)/2;
+    // y = -row + (levelDef.length - 3) / 2;
+    y = -row;
     map[y] = {};
 
     var length = Math.floor(levelDef[row].length / 2);
     map.right = Math.max(map.right, length);
 
     for (var column = 0; column < levelDef[row].length; column += 2) {
-      x = Math.floor(column / 2);
       // x = Math.floor(column / 2) + (2 - levelDef.length/2);
+      x = Math.floor(column / 2);
       var cell = levelDef[row][column];
       var object = null;
 
-      if (cell === '#') {
+      if (cell === '#')
         object = createWallMaze();
-      } else if (cell == 'o') {
+      else if (cell == 'o')
         object = createBigDot();
-      } else if (cell == '.') {
+      else if (cell == '.') {
+        map.numDots += 1;
         object = createDot();
-      } else if (cell === 'P') {
+      } else if (cell === 'P')
         map.pacmanSkeleton = new THREE.Vector3(x, y, 0);
-      } else if (cell === 'G') {
+      else if (cell === 'G')
         map.ghostsSkeleton.push(new THREE.Vector3(x, y, 0));
-      }
 
       if (object !== null) {
         object.position.set(x, y, 0);
@@ -371,6 +372,7 @@ function createMap(levelDef) {
       }
     }
   }
+
   map.centerX = (map.left + map.right) / 2;
   map.centerY = (map.bottom + map.top) / 2;
 
@@ -378,28 +380,16 @@ function createMap(levelDef) {
 }
 
 function fixObjectLimit(obj, map) {
-  // if (obj.position.x < map.left)
-  //   obj.position.x = map.right;
-  // else if (obj.position.x > map.right)
-  //   obj.position.x = map.left;
+  if (obj.position.x < map.left)
+    obj.position.x = map.right;
+  else if (obj.position.x > map.right)
+    obj.position.x = map.left;
 
-  // if (obj.position.y > map.top)
-  //   obj.position.y = map.bottom;
-  // else if (obj.position.y < map.bottom)
-  //   obj.position.y = map.top;
+  if (obj.position.y > map.top)
+    obj.position.y = map.bottom;
+  else if (obj.position.y < map.bottom)
+    obj.position.y = map.top;
 }
-
-var wrapObject = function (object, map) {
-  if (object.position.x < map.left)
-      object.position.x = map.right;
-  else if (object.position.x > map.right)
-      object.position.x = map.left;
-
-  if (object.position.y > map.top)
-      object.position.y = map.bottom;
-  else if (object.position.y < map.bottom)
-      object.position.y = map.top;
-};
 
 function getObjAtMap(map, pos) {
   var x = Math.round(pos.x);
@@ -427,7 +417,6 @@ function createWallMaze() {
 
 function isWall(map, pos) {
   var obj = getObjAtMap(map, pos);
-  // console.log('obj', obj);
   return obj && obj.isWall === true; 
 }
 
@@ -445,7 +434,6 @@ function createPacman(skeleton) {
   pacman.frames = pacmanGeometries;
   pacman.position.copy(skeleton);
   pacman.direction = new THREE.Vector3(-1, 0, 0);
-  
   pacman.isWrapper = true;
 
   scene.add(pacman);
@@ -470,11 +458,9 @@ function createGhost(skeleton, color) {
 
   var ghost = new THREE.Group();
   ghost.add(objSemisphere, objCylinder);
-
   ghost.isWrapper = true;
 
   scene.add(ghost);
-
   return ghost;
 }
 
