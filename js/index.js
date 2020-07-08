@@ -435,6 +435,7 @@ function createPacman(skeleton) {
   pacman.position.copy(skeleton);
   pacman.direction = new THREE.Vector3(-1, 0, 0);
   pacman.isWrapper = true;
+  pacman.ateBigDot = false;
 
   scene.add(pacman);
   return pacman;
@@ -565,11 +566,11 @@ function movePacman() {
     numDotsEaten += 1;
     updateGameScore(5);
   }
-  // pacman.atePellet = false;
+  pacman.ateBigDot = false;
   if (obj && obj.isBigDot === true && obj.visible === true) {
     removeObjAtMap(map, pacman.position);
     updateLifesCounter(); //--------- SÓ PARA TESTE
-    // pacman.atePellet = true;
+    pacman.ateBigDot = true;
   }
 }
 
