@@ -305,6 +305,12 @@ function createGameScore() {
   gameScoreContainer.appendChild(gameScoreValue);
 }
 
+function updateGameScore(value) {
+  gameScore += value;
+  if (gameScore > 0) 
+    document.getElementById('game-score').getElementsByClassName('score')[0].innerHTML = gameScore;
+}
+
 function createLifesCounter() {
   var lifesCounterContainer = document.getElementById('lifes-counter');
   for (var i = 0; i < lifesCounter; i++) {
@@ -312,6 +318,13 @@ function createLifesCounter() {
     life.src = './pacman.png';
     life.className = 'life';
     lifesCounterContainer.appendChild(life);
+  }
+}
+
+function updateLifesCounter() {
+  if (lifesCounter > 0) {
+    lifesCounter -= 1;
+    document.getElementsByClassName('life')[lifesCounter].style.display = 'none';
   }
 }
 
@@ -365,15 +378,15 @@ function createMap(levelDef) {
 }
 
 function fixObjectLimit(obj, map) {
-  if (obj.position.x < map.left)
-    obj.position.x = map.right;
-  else if (obj.position.x > map.right)
-    obj.position.x = map.left;
+  // if (obj.position.x < map.left)
+  //   obj.position.x = map.right;
+  // else if (obj.position.x > map.right)
+  //   obj.position.x = map.left;
 
-  if (obj.position.y > map.top)
-    obj.position.y = map.bottom;
-  else if (obj.position.y < map.bottom)
-    obj.position.y = map.top;
+  // if (obj.position.y > map.top)
+  //   obj.position.y = map.bottom;
+  // else if (obj.position.y < map.bottom)
+  //   obj.position.y = map.top;
 }
 
 var wrapObject = function (object, map) {
@@ -564,10 +577,12 @@ function movePacman() {
   if (obj && obj.isDot === true && obj.visible === true) {
     removeObjAtMap(map, pacman.position);
     numDotsEaten += 1;
+    updateGameScore(5);
   }
   // pacman.atePellet = false;
   if (obj && obj.isBigDot === true && obj.visible === true) {
     removeObjAtMap(map, pacman.position);
+    updateLifesCounter(); //--------- SÓ PARA TESTE
     // pacman.atePellet = true;
   }
 }

@@ -145,7 +145,16 @@ Esta função foi alterada com o objetivo de introduzir um mapeamento de textura
 Mudou-se o formato do objeto para um cubo. Assim, definiu-se as functions vertexShader2() (aqui calcula-se onde os pontos do nosso mesh deverão ser colocados) e fragmentShader2() (função que será aplicada em cada fragmento do mesh para colori-los), sendo o código GLSL escrito dentro de uma string, e a variavel uniforms para criar o objeto THREE.ShaderMaterial().
 
 ### :three: Tarefa 3
-// Comentando as funções já escritas
+///// Comentando as funções que começaram a ser implementadas
+
+
+-- **`function createGameScore()`** && -- **`function createLifesCounter()`** 
+Funções que inicializam o placar do jogo e a quantidade de vidas, respectivamente. A partir do JavaScript, são buscados os elementos correspondentes a partir do seu 'id' - #game-score e #lifes-counter - e inseridos então dinamicamente na árvore de elementos HTML - DOM. Assim, com o carregamento da cena, as `divs` correspondentes são rendezidas a partir do código dos métodos `createGameScore` e `createLifesCounter`.
+
+-- **`function updateGameScore(value)`** ????
+
+-- **`function updateLifesCounter()`** ???? 
+
 -- **`function fixObjectLimit(obj, map)`** 
 Trata o limite da posição de um objeto caso ele ultrapasse a área do mapa. Assim como no jogo oficial do PacMan, a lógica do código faz com que o objeto em questão apareça do lado oposto exatamente no mesmo eixo da posição em que saiu de uma extremidade do mapa. 
 Na função `animateScene` (re-renderização em cena dos métodos indicados a cada frame), `fixObjectLimit` é chamado para verificar se na cena algum objeto com propriedade `isWrapper` está fora dos limites definidos pelo mapa - a partir do código abaixo.
