@@ -64,6 +64,7 @@ var PACMAN_RADIUS = 0.4;
 var GHOST_RADIUS = PACMAN_RADIUS * 1.15;
 var DOT_RADIUS = 0.05;
 var PACMAN_SPEED = 2;
+var GHOST_SPEED = 1.5;
 var UP = new THREE.Vector3(0, 0, 1);
 var LEFT = new THREE.Vector3(-1, 0, 0);
 var TOP = new THREE.Vector3(0, 1, 0);
@@ -76,10 +77,12 @@ var cameraFP = true;
 var cancelChangeCamera = false;
 var lifesCounter = 3;
 var gameScore = 0;
+var numGhosts = 0;
+var ghostSpawnTime = -8;
 var numDotsEaten = 0;
 var LEVEL = [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
-  '# . . . . . . G . . . . . # # . . . . . . . . . . . . #',
+  '# . . . . . . . . . . . . # # . . . . . . . . . . . . #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
   '# o # # # # . # # # # # . # # . # # # # # . # # # # o #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
@@ -96,15 +99,15 @@ var LEVEL = [
   '# # # # # # . # #   #             #   # # . # # # # # #',
   '          # . # #   # # # # # # # #   # # . #          ',
   '          # . # #                     # # . #          ',
-  '          # . # # G # # # # # # # #   # # . #          ',
-  '# # # # # # . # #   # # # # # # # #   # # . # # # # # #',
+  '          # . # # . # # # # # # # #   # # . #          ',
+  '# # # # # # . # # . # # # # # # # #   # # . # # # # # #',
   '# . . . . . . . . . . . . # # . . . . . . . . . . . . #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
-  '# o . . # # . . . . . . . .   . . . . . . . # # . . o #',
+  '# o . . # # . . . . . . . . . . . . . . . . # # . . o #',
   '# # # . # # . # # . # # # # # # # # . # # . # # . # # #',
   '# # # . # # . # # . # # # # # # # # . # # . # # . # # #',
-  '# . . . . . . # # . . . . # # . . . . # # G . . . . . #',
+  '# . . . . . . # # . . . . # # . . . . # # . . . . . . #',
   '# . # # # # # # # # # # . # # . # # # # # # # # # # . #',
   '# . # # # # # # # # # # . # # . # # # # # # # # # # . #',
   '# . . . . . . . . . . . . . . . . . . . . . . . . . . #',
@@ -240,7 +243,6 @@ function initGame() {
     keys = createKeyState(); 
     map = createMap(LEVEL);
     pacman = createPacman(map.pacmanSkeleton);
-    map.ghostsSkeleton.map((ghostSkeleton, idx) => ghosts.push(createGhost(ghostSkeleton, colorsGhost[idx])));
     createLifesCounter();
     createGameScore();
     animateScene();
@@ -336,7 +338,6 @@ function createMap(levelDef) {
   map.numDots = 0;
   map.pacmanSkeleton = null;
   map.ghostSkeleton = null;
-  map.ghostsSkeleton = [];
 
   var x, y;
   for (var row = 0; row < levelDef.length; row++) {
@@ -362,8 +363,8 @@ function createMap(levelDef) {
         object = createDot();
       } else if (cell === 'P')
         map.pacmanSkeleton = new THREE.Vector3(x, y, 0);
-      else if (cell === 'G')
-        map.ghostsSkeleton.push(new THREE.Vector3(x, y, 0));
+      else if (cell === 'G') 
+        map.ghostSkeleton = new THREE.Vector3(x, y, 0);
 
       if (object !== null) {
         object.position.set(x, y, 0);
@@ -448,18 +449,18 @@ function createGhost(skeleton, color) {
 
   var geomSemisphere = new THREE.SphereGeometry(GHOST_RADIUS, 40, 40, 0, Math.PI);
   var objSemisphere = new THREE.Mesh(geomSemisphere, material);
-  objSemisphere.position.x = x;
-  objSemisphere.position.y = y;
-  objSemisphere.position.z = z + heightCylinder/2;
+  objSemisphere.position.z = z + heightCylinder / 2;
   
   var geomCylinder = new THREE.CylinderGeometry(GHOST_RADIUS, GHOST_RADIUS, heightCylinder, 40);  
   var objCylinder = new THREE.Mesh(geomCylinder, material);
   objCylinder.rotateX(Math.PI / 2);
-  objCylinder.position.copy(skeleton);
 
   var ghost = new THREE.Group();
   ghost.add(objSemisphere, objCylinder);
+  ghost.position.copy(skeleton);
+  ghost.direction = new THREE.Vector3(-1, 0, 0);
   ghost.isWrapper = true;
+  ghost.isGhost = true;
 
   scene.add(ghost);
   return ghost;
@@ -513,7 +514,7 @@ function animateFloatGhost(ghost) {
   const deltaY = 0.2;
 
   if (frames % framesInterval === 0) {
-    posYGhost = Math.round((posYGhost +signalGhost*0.05) * 100) / 100;
+    posYGhost = Math.round((posYGhost + signalGhost*0.05) * 100) / 100;
     scene.remove(ghost);
     ghost.position.z = posYGhost;
     scene.add(ghost);
@@ -598,6 +599,50 @@ function createKeyState() {
   return keyState;
 }
 
+function moveGhost(ghost) {
+  var previousPosition = new THREE.Vector3();
+  var currentPosition = new THREE.Vector3();
+  var leftTurn = new THREE.Vector3();
+  var rightTurn = new THREE.Vector3();
+  
+  previousPosition.copy(ghost.position).addScaledVector(ghost.direction, 0.5).round();
+  ghost.translateOnAxis(ghost.direction, delta * GHOST_SPEED);
+  currentPosition.copy(ghost.position).addScaledVector(ghost.direction, 0.5).round();
+
+  // verifica se a posição anterior não é igual a atual - se não está "encurralado"?
+  if (!currentPosition.equals(previousPosition)) {
+    leftTurn.copy(ghost.direction).applyAxisAngle(UP, Math.PI / 2);
+    rightTurn.copy(ghost.direction).applyAxisAngle(UP, -Math.PI / 2);
+
+    var forwardWall = isWall(map, currentPosition);
+    var leftWall = isWall(map, currentPosition.copy(ghost.position).add(leftTurn));
+    var rightWall = isWall(map, currentPosition.copy(ghost.position).add(rightTurn));
+
+    // não existe parede lateral, então pode virar 90 graus tanto para a esquerda quanto para a direita
+    if (!leftWall || !rightWall) {
+      // se o fantasma puder girar, escolha aleatoriamente um das direções possíveis
+      var possibleTurns = [];
+      if (!forwardWall) possibleTurns.push(ghost.direction);
+      if (!leftWall) possibleTurns.push(leftTurn);
+      if (!rightWall) possibleTurns.push(rightTurn);
+
+      // if (possibleTurns.length === 0)
+      //     throw new Error('A ghost got stuck!');
+
+      var newDirection = possibleTurns[Math.floor(Math.random() * possibleTurns.length)];
+      ghost.direction.copy(newDirection);
+
+      // posicionar o fantasma numa posição inteira e seguir com a movimentação em uma nova direção
+      ghost.position.round().addScaledVector(ghost.direction, delta);
+    }
+  }
+}
+
+function updateGhost(ghost, now) {
+  moveGhost(ghost);
+  animateFloatGhost(ghost);
+}
+
 // /\/\/\/\/\/\/\/\  general animate scene  /\/\/\/\/\/\/\/\
 function animateScene() {
   requestAnimationFrame(animateScene);
@@ -620,16 +665,26 @@ function animateScene() {
       }
     }
   } else {
+    var now = window.performance.now() / 1000;
+    
     if (cameraFP)
       updateFirstPersonCamera();
     changeCameraView();
     animateMouthPacman();
-    ghosts.map(ghost => animateFloatGhost(ghost));
     movePacman();
+
+    if (numGhosts < 4 && now - ghostSpawnTime > 8) {
+      ghosts.push(createGhost(map.ghostSkeleton, colorsGhost[numGhosts]));
+      numGhosts += 1;
+      ghostSpawnTime = now;
+    } 
 
     scene.children.forEach(obj => {
       if (obj.isWrapper === true)
         fixObjectLimit(obj, map);
+      if (obj.isGhost === true) {
+        updateGhost(obj, now);
+      }
     });
   }
 
