@@ -76,6 +76,9 @@ var delta = 0.02;
 var cameraFP = true;
 var cancelChangeCamera = false;
 var lifesCounter = 3;
+var won = false;
+var lost = false;
+var lostTime, wonTime;
 var gameScore = 0;
 var numGhosts = 0;
 var ghostSpawnTime = -8;
@@ -434,7 +437,8 @@ function createPacman(skeleton) {
   pacman.frames = pacmanGeometries;
   pacman.position.copy(skeleton);
   pacman.direction = new THREE.Vector3(-1, 0, 0);
-  pacman.isWrapper = true;
+  pacman.distanceMoved = 0;
+  pacman.hasLimit = true;
   pacman.ateBigDot = false;
 
   scene.add(pacman);
@@ -458,7 +462,7 @@ function createGhost(skeleton, color) {
   ghost.add(objSemisphere, objCylinder);
   ghost.position.copy(skeleton);
   ghost.direction = new THREE.Vector3(-1, 0, 0);
-  ghost.isWrapper = true;
+  ghost.hasLimit = true;
   ghost.isGhost = true;
 
   scene.add(ghost);
@@ -574,6 +578,26 @@ function movePacman() {
   }
 }
 
+function updatePacman(now) {
+  if (!won && !lost)
+    movePacman();
+
+  if (!won && numDotsEaten === map.numDots) {
+    won = true;
+    console.log('[GAME] YOU WON!');
+  }
+  
+  // ---[TODO] !!!!! RESETAR CENA SE won = true
+
+  if (lost && lifesCounter > 0 && now - lostTime > 4) {
+    //now - lostTime > 4 - resetar pacman depois de 4 segundos que ele morreu
+    lost = false;
+    pacman.distanceMoved = 0;
+    pacman.position.copy(map.pacmanSkeleton);
+    pacman.direction.copy(LEFT);
+  }
+}
+
 function createKeyState() {
   var keyState = {};
 
@@ -679,10 +703,10 @@ function animateScene() {
     changeCameraView();
     animateMouthPacman();
     showGhostAtMap(now);
-    movePacman();
+    updatePacman(now);
 
     scene.children.forEach(obj => {
-      if (obj.isWrapper === true)
+      if (obj.hasLimit === true)
         fixObjectLimit(obj, map);
       if (obj.isGhost === true) 
         updateGhost(obj, now);
