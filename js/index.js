@@ -11,12 +11,12 @@ var renderer, scene, camera, controls;
 var arcadeRotation = 'right';
 var arcadeLoader, arcadeMesh, fontLoader, fontMesh = [];
 const clock = new THREE.Clock();
-const vertexShader = `
+const vertexShaderEnter = `
   void main() {
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
-const fragmentShader = `
+const fragmentShaderEnter = `
   uniform vec3 u_color;
   uniform float u_time;
 
@@ -24,9 +24,31 @@ const fragmentShader = `
     gl_FragColor = vec4(1.0, cos(u_time * 0.5) + 0.5, 0.0, 1.0).rgba;
   }
 `;
-const uniforms = {
+const uniformsEnter = {
   u_time: {value: 0.0},
   u_color: {value: new THREE.Color(0x0000FF)}
+}
+const vertexShaderBigDot = `
+  varying vec3 vUv; 
+
+  void main() {
+    vUv = position; 
+    vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * modelViewPosition; 
+  }
+`;
+const fragmentShaderBigDot = `
+  uniform vec3 colorA; 
+  uniform vec3 colorB; 
+  varying vec3 vUv;
+
+  void main() {
+    gl_FragColor = vec4(mix(colorA, colorB, vUv.z), 1.0);
+  }
+`;
+const uniformsBigDot = {
+  colorB: {type: 'vec3', value: new THREE.Color(0xACB6E5)},
+  colorA: {type: 'vec3', value: new THREE.Color(0x74ebd5)}
 }
 
 // /\/\/\/\/\/\/\/\  game scene  /\/\/\/\/\/\/\/\
@@ -42,6 +64,7 @@ var PACMAN_RADIUS = 0.4;
 var GHOST_RADIUS = PACMAN_RADIUS * 1.15;
 var DOT_RADIUS = 0.05;
 var PACMAN_SPEED = 2;
+var GHOST_SPEED = 1.5;
 var UP = new THREE.Vector3(0, 0, 1);
 var LEFT = new THREE.Vector3(-1, 0, 0);
 var TOP = new THREE.Vector3(0, 1, 0);
@@ -52,9 +75,14 @@ var keys;
 var delta = 0.02;
 var cameraFP = true;
 var cancelChangeCamera = false;
+var lifesCounter = 3;
+var gameScore = 0;
+var numGhosts = 0;
+var ghostSpawnTime = -8;
+var numDotsEaten = 0;
 var LEVEL = [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
-  '# . . . . . . G . . . . . # # . . . . . . . . . . . . #',
+  '# . . . . . . . . . . . . # # . . . . . . . . . . . . #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
   '# o # # # # . # # # # # . # # . # # # # # . # # # # o #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
@@ -67,19 +95,19 @@ var LEVEL = [
   '          # . # #         G           # # . #          ',
   '          # . # #   # # # # # # # #   # # . #          ',
   '# # # # # # . # #   #             #   # # . # # # # # #',
-  '            .       #     P       #       .            ',
+  '            P       #             #       .            ',
   '# # # # # # . # #   #             #   # # . # # # # # #',
   '          # . # #   # # # # # # # #   # # . #          ',
   '          # . # #                     # # . #          ',
-  '          # . # # G # # # # # # # #   # # . #          ',
+  '          # . # #   # # # # # # # #   # # . #          ',
   '# # # # # # . # #   # # # # # # # #   # # . # # # # # #',
   '# . . . . . . . . . . . . # # . . . . . . . . . . . . #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
   '# . # # # # . # # # # # . # # . # # # # # . # # # # . #',
-  '# o . . # # . . . . . . . .   . . . . . . . # # . . o #',
+  '# o . . # # . . . . . . . . . . . . . . . . # # . . o #',
   '# # # . # # . # # . # # # # # # # # . # # . # # . # # #',
   '# # # . # # . # # . # # # # # # # # . # # . # # . # # #',
-  '# . . . . . . # # . . . . # # . . . . # # G . . . . . #',
+  '# . . . . . . # # . . . . # # . . . . # # . . . . . . #',
   '# . # # # # # # # # # # . # # . # # # # # # # # # # . #',
   '# . # # # # # # # # # # . # # . # # # # # # # # # # . #',
   '# . . . . . . . . . . . . . . . . . . . . . . . . . . #',
@@ -112,7 +140,6 @@ function initApp() {
     createInitialPerspectiveCamera();
     createGLTFLoader();
     createFontLoader();
-
     animateScene();
   } else if(webGLExists === false) {
     alert("Your browser doesn't support WebGL.");
@@ -151,17 +178,17 @@ function createFontLoader() {
 
 function handleEnterFont(font) {
   var playText = [
-      new THREE.TextGeometry("press", {
+    new THREE.TextGeometry("press", {
       font,
       size: 10,
       height: 10
     }),
-      new THREE.TextGeometry("ENTER", {
+    new THREE.TextGeometry("ENTER", {
       font,
       size: 18,
       height: 10
     }),
-      new THREE.TextGeometry("to start", {
+    new THREE.TextGeometry("to start", {
       font,
       size: 10,
       height: 10
@@ -170,8 +197,12 @@ function handleEnterFont(font) {
 
   fontMesh.push(
     new THREE.Mesh(playText[0], new THREE.MeshPhongMaterial({color: 0xffff00})),
-    // new THREE.Mesh(playText[1], new THREE.MeshPhongMaterial({color: 0xff0000})),
-    new THREE.Mesh(playText[1], new THREE.ShaderMaterial({vertexShader, fragmentShader, uniforms, lights: false})),
+    new THREE.Mesh(playText[1], new THREE.ShaderMaterial({
+      vertexShader: vertexShaderEnter, 
+      fragmentShader: fragmentShaderEnter,
+      uniforms: uniformsEnter, 
+      lights: false
+    })),
     new THREE.Mesh(playText[2], new THREE.MeshPhongMaterial({color: 0xffff00}))
   );
   fontMesh[0].position.set(-100, -40, 0);
@@ -211,7 +242,8 @@ function initGame() {
     keys = createKeyState(); 
     map = createMap(LEVEL);
     pacman = createPacman(map.pacmanSkeleton);
-    map.ghostsSkeleton.map((ghostSkeleton, idx) => ghosts.push(createGhost(ghostSkeleton, colorsGhost[idx])));
+    createLifesCounter();
+    createGameScore();
     animateScene();
   } else if(webGLExists === false) {
     alert("Your browser doesn't support WebGL.");
@@ -232,6 +264,7 @@ function createGamePerspectiveCamera() {
   camera.position.set(0, -40, 50);
   camera.lookAt(scene.position);
   controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableRotate = false;
 }
 
 function createFirstPersonCamera() {
@@ -254,47 +287,83 @@ function updateFirstPersonCamera() {
 function changeCameraView() {
   if (keys['C']) {
     if (!cancelChangeCamera) {
-      if (cameraFP) createPerspectiveCamera();
+      if (cameraFP) createGamePerspectiveCamera();
       else createFirstPersonCamera();
       cancelChangeCamera = true;
     }
   } else cancelChangeCamera = false;
 }
 
+function createGameScore() {
+  var gameScoreContainer = document.getElementById('game-score');
+  var gameScoreText = document.createElement('span');
+  gameScoreText.innerHTML = "GAME SCORE";
+  gameScoreContainer.appendChild(gameScoreText);
+  var gameScoreValue = document.createElement('span');
+  gameScoreValue.className = 'score';
+  gameScoreValue.innerHTML = gameScore;
+  gameScoreContainer.appendChild(gameScoreValue);
+}
+
+function updateGameScore(value) {
+  gameScore += value;
+  if (gameScore > 0) 
+    document.getElementById('game-score').getElementsByClassName('score')[0].innerHTML = gameScore;
+}
+
+function createLifesCounter() {
+  var lifesCounterContainer = document.getElementById('lifes-counter');
+  for (var i = 0; i < lifesCounter; i++) {
+    var life = document.createElement('img');
+    life.src = './pacman.png';
+    life.className = 'life';
+    lifesCounterContainer.appendChild(life);
+  }
+}
+
+function updateLifesCounter() {
+  if (lifesCounter > 0) {
+    lifesCounter -= 1;
+    document.getElementsByClassName('life')[lifesCounter].style.display = 'none';
+  }
+}
+
 function createMap(levelDef) {
   var map = {};
-  map.bottom = 1 -levelDef.length;
+  map.bottom = 1 - levelDef.length;
   map.top = 0;
   map.left = 0;
   map.right = 0;
+  map.numDots = 0;
   map.pacmanSkeleton = null;
   map.ghostSkeleton = null;
-  map.ghostsSkeleton = [];
 
   var x, y;
   for (var row = 0; row < levelDef.length; row++) {
-    y = -row + (levelDef.length-3)/2;
+    // y = -row + (levelDef.length - 3) / 2;
+    y = -row;
     map[y] = {};
 
     var length = Math.floor(levelDef[row].length / 2);
     map.right = Math.max(map.right, length);
 
     for (var column = 0; column < levelDef[row].length; column += 2) {
-      x = Math.floor(column / 2) + (2 - levelDef.length/2);
+      // x = Math.floor(column / 2) + (2 - levelDef.length/2);
+      x = Math.floor(column / 2);
       var cell = levelDef[row][column];
       var object = null;
 
-      if (cell === '#') {
+      if (cell === '#')
         object = createWallMaze();
-      } else if (cell == 'o') {
+      else if (cell == 'o')
         object = createBigDot();
-      } else if (cell == '.') {
+      else if (cell == '.') {
+        map.numDots += 1;
         object = createDot();
-      } else if (cell === 'P') {
+      } else if (cell === 'P')
         map.pacmanSkeleton = new THREE.Vector3(x, y, 0);
-      } else if (cell === 'G') {
-        map.ghostsSkeleton.push(new THREE.Vector3(x, y, 0));
-      }
+      else if (cell === 'G') 
+        map.ghostSkeleton = new THREE.Vector3(x, y, 0);
 
       if (object !== null) {
         object.position.set(x, y, 0);
@@ -303,18 +372,52 @@ function createMap(levelDef) {
       }
     }
   }
+
   map.centerX = (map.left + map.right) / 2;
   map.centerY = (map.bottom + map.top) / 2;
 
   return map;
 }
 
+function fixObjectLimit(obj, map) {
+  if (obj.position.x < map.left)
+    obj.position.x = map.right;
+  else if (obj.position.x > map.right)
+    obj.position.x = map.left;
+
+  if (obj.position.y > map.top)
+    obj.position.y = map.bottom;
+  else if (obj.position.y < map.bottom)
+    obj.position.y = map.top;
+}
+
+function getObjAtMap(map, pos) {
+  var x = Math.round(pos.x);
+  var y = Math.round(pos.y);
+
+  return map[y] && map[y][x];
+}
+
+function removeObjAtMap(map, pos) {
+  var x = Math.round(pos.x);
+  var y = Math.round(pos.y);
+
+  if (map[y] && map[y][x]) 
+    map[y][x].visible = false;
+}
+
 function createWallMaze() {
   var geometry = new THREE.BoxGeometry(1, 1, 1);
   var material = new THREE.MeshPhongMaterial({ color: colorWall });
   var wall = new THREE.Mesh(geometry, material);
+  wall.isWall = true;
 
   return wall;
+}
+
+function isWall(map, pos) {
+  var obj = getObjAtMap(map, pos);
+  return obj && obj.isWall === true; 
 }
 
 function createPacman(skeleton) {
@@ -327,10 +430,12 @@ function createPacman(skeleton) {
 
   var pacmanMaterial = new THREE.MeshPhongMaterial({ color: 0xffff00, side: THREE.DoubleSide });
   pacman = new THREE.Mesh(pacmanGeometries[10], pacmanMaterial);
-
+  
   pacman.frames = pacmanGeometries;
   pacman.position.copy(skeleton);
   pacman.direction = new THREE.Vector3(-1, 0, 0);
+  pacman.isWrapper = true;
+  pacman.ateBigDot = false;
 
   scene.add(pacman);
   return pacman;
@@ -343,20 +448,20 @@ function createGhost(skeleton, color) {
 
   var geomSemisphere = new THREE.SphereGeometry(GHOST_RADIUS, 40, 40, 0, Math.PI);
   var objSemisphere = new THREE.Mesh(geomSemisphere, material);
-  objSemisphere.position.x = x;
-  objSemisphere.position.y = y;
-  objSemisphere.position.z = z + heightCylinder/2;
+  objSemisphere.position.z = z + heightCylinder / 2;
   
   var geomCylinder = new THREE.CylinderGeometry(GHOST_RADIUS, GHOST_RADIUS, heightCylinder, 40);  
   var objCylinder = new THREE.Mesh(geomCylinder, material);
   objCylinder.rotateX(Math.PI / 2);
-  objCylinder.position.copy(skeleton);
 
   var ghost = new THREE.Group();
   ghost.add(objSemisphere, objCylinder);
+  ghost.position.copy(skeleton);
+  ghost.direction = new THREE.Vector3(-1, 0, 0);
+  ghost.isWrapper = true;
+  ghost.isGhost = true;
 
   scene.add(ghost);
-
   return ghost;
 }
 
@@ -367,50 +472,21 @@ function createDot() {
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set( 4, 4 );
   var coinMaterial = new THREE.MeshLambertMaterial({ map: texture });
-  var dot = new THREE.Mesh(coinGeometry, coinMaterial);  
+  var dot = new THREE.Mesh(coinGeometry, coinMaterial);
+  dot.isDot = true;
 
   return dot;
 }
 
-function vertexShader2() {
-  return `
-    varying vec3 vUv; 
-
-    void main() {
-      vUv = position; 
-
-      vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
-      gl_Position = projectionMatrix * modelViewPosition; 
-    }
-  `
-}
-
-function fragmentShader2() {
-  return `
-      uniform vec3 colorA; 
-      uniform vec3 colorB; 
-      varying vec3 vUv;
-
-      void main() {
-        gl_FragColor = vec4(mix(colorA, colorB, vUv.z), 1.0);
-      }
-  `
-}
-
 function createBigDot() {
-  let uniforms = {
-    colorB: {type: 'vec3', value: new THREE.Color(0xACB6E5)},
-    colorA: {type: 'vec3', value: new THREE.Color(0x74ebd5)}
-}
-
-  let geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
+  let geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
   let material =  new THREE.ShaderMaterial({
-    uniforms: uniforms,
-    fragmentShader: fragmentShader2(),
-    vertexShader: vertexShader2(),
-  })
-
-  let bigDot = new THREE.Mesh(geometry, material)
+    vertexShader: vertexShaderBigDot,
+    fragmentShader: fragmentShaderBigDot,
+    uniforms: uniformsBigDot,
+  });
+  let bigDot = new THREE.Mesh(geometry, material);
+  bigDot.isBigDot = true;
 
   return bigDot;
 }
@@ -437,7 +513,7 @@ function animateFloatGhost(ghost) {
   const deltaY = 0.2;
 
   if (frames % framesInterval === 0) {
-    posYGhost = Math.round((posYGhost +signalGhost*0.05) * 100) / 100;
+    posYGhost = Math.round((posYGhost + signalGhost*0.05) * 100) / 100;
     scene.remove(ghost);
     ghost.position.z = posYGhost;
     scene.add(ghost);
@@ -468,6 +544,34 @@ function movePacman() {
     pacman.translateOnAxis(LEFT, -PACMAN_SPEED * delta);
     pacman.distanceMoved += PACMAN_SPEED * delta;
   }
+
+  // [TODO] - explicar essa parte no README.md
+  var leftSide = pacman.position.clone().addScaledVector(LEFT, PACMAN_RADIUS).round();
+  var topSide = pacman.position.clone().addScaledVector(TOP, PACMAN_RADIUS).round();
+  var rightSide = pacman.position.clone().addScaledVector(RIGHT, PACMAN_RADIUS).round();
+  var bottomSide = pacman.position.clone().addScaledVector(BOTTOM, PACMAN_RADIUS).round();
+
+  if (isWall(map, leftSide)) 
+    pacman.position.x = leftSide.x + 0.5 + PACMAN_RADIUS;
+  if (isWall(map, rightSide)) 
+    pacman.position.x = rightSide.x - 0.5 - PACMAN_RADIUS;
+  if (isWall(map, topSide)) 
+    pacman.position.y = topSide.y - 0.5 - PACMAN_RADIUS;
+  if (isWall(map, bottomSide)) 
+    pacman.position.y = bottomSide.y + 0.5 + PACMAN_RADIUS;
+
+  var obj = getObjAtMap(map, pacman.position);
+  if (obj && obj.isDot === true && obj.visible === true) {
+    removeObjAtMap(map, pacman.position);
+    numDotsEaten += 1;
+    updateGameScore(5);
+  }
+  pacman.ateBigDot = false;
+  if (obj && obj.isBigDot === true && obj.visible === true) {
+    removeObjAtMap(map, pacman.position);
+    updateLifesCounter(); //--------- SÓ PARA TESTE
+    pacman.ateBigDot = true;
+  }
 }
 
 function createKeyState() {
@@ -494,6 +598,58 @@ function createKeyState() {
   return keyState;
 }
 
+function showGhostAtMap(now) {
+  if (numGhosts < 4 && now - ghostSpawnTime > 8) {
+    ghosts.push(createGhost(map.ghostSkeleton, colorsGhost[numGhosts]));
+    numGhosts += 1;
+    ghostSpawnTime = now;
+  } 
+}
+
+function moveGhost(ghost) {
+  var previousPosition = new THREE.Vector3();
+  var currentPosition = new THREE.Vector3();
+  var leftTurn = new THREE.Vector3();
+  var rightTurn = new THREE.Vector3();
+  
+  previousPosition.copy(ghost.position).addScaledVector(ghost.direction, 0.5).round();
+  ghost.translateOnAxis(ghost.direction, delta * GHOST_SPEED);
+  currentPosition.copy(ghost.position).addScaledVector(ghost.direction, 0.5).round();
+
+  // verifica se a posição anterior não é igual a atual - se não está "encurralado"?
+  if (!currentPosition.equals(previousPosition)) {
+    leftTurn.copy(ghost.direction).applyAxisAngle(UP, Math.PI / 2);
+    rightTurn.copy(ghost.direction).applyAxisAngle(UP, -Math.PI / 2);
+
+    var forwardWall = isWall(map, currentPosition);
+    var leftWall = isWall(map, currentPosition.copy(ghost.position).add(leftTurn));
+    var rightWall = isWall(map, currentPosition.copy(ghost.position).add(rightTurn));
+
+    // não existe parede lateral, então pode virar 90 graus tanto para a esquerda quanto para a direita
+    if (!leftWall || !rightWall) {
+      // se o fantasma puder girar, escolha aleatoriamente um das direções possíveis
+      var possibleTurns = [];
+      if (!forwardWall) possibleTurns.push(ghost.direction);
+      if (!leftWall) possibleTurns.push(leftTurn);
+      if (!rightWall) possibleTurns.push(rightTurn);
+
+      // if (possibleTurns.length === 0)
+      //     throw new Error('A ghost got stuck!');
+
+      var newDirection = possibleTurns[Math.floor(Math.random() * possibleTurns.length)];
+      ghost.direction.copy(newDirection);
+
+      // posicionar o fantasma numa posição inteira e seguir com a movimentação em uma nova direção
+      ghost.position.round().addScaledVector(ghost.direction, delta);
+    }
+  }
+}
+
+function updateGhost(ghost, now) {
+  moveGhost(ghost);
+  animateFloatGhost(ghost);
+}
+
 // /\/\/\/\/\/\/\/\  general animate scene  /\/\/\/\/\/\/\/\
 function animateScene() {
   requestAnimationFrame(animateScene);
@@ -501,7 +657,7 @@ function animateScene() {
   frames += 1;
   
   if (enterPressed === false) {
-    uniforms.u_time.value = clock.getElapsedTime();
+    uniformsEnter.u_time.value = clock.getElapsedTime();
 
     if (arcadeMesh) {
       if (arcadeMesh.rotation.y > - 0.2 && arcadeRotation === 'right') {
@@ -516,12 +672,21 @@ function animateScene() {
       }
     }
   } else {
+    var now = window.performance.now() / 1000;
+    
     if (cameraFP)
       updateFirstPersonCamera();
     changeCameraView();
     animateMouthPacman();
-    ghosts.map(ghost => animateFloatGhost(ghost));
+    showGhostAtMap(now);
     movePacman();
+
+    scene.children.forEach(obj => {
+      if (obj.isWrapper === true)
+        fixObjectLimit(obj, map);
+      if (obj.isGhost === true) 
+        updateGhost(obj, now);
+    });
   }
 
   renderer.render(scene, camera);

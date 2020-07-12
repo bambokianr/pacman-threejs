@@ -4,11 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
     <title>3D PacMan || Three.JS</title>
     <script src="js/dependences/three.min.js"></script>
 		<script src="js/dependences/OrbitControls.js"></script>
 		<script src="js/dependences/DetectorWebGL.js"></script>
-		
     <script type="module" src="https://cdn.rawgit.com/mrdoob/three.js/master/build/three.module.js"></script>
     <script type="module" src="https://cdn.rawgit.com/mrdoob/three.js/master/examples/js/loaders/GLTFLoader.js"></script>
     <style>
@@ -25,10 +25,34 @@
         margin: 0;
         padding: 0;
       }
+      #game-score {
+        font-family: 'Russo One', sans-serif;
+        color: #fff;
+        position: absolute;
+        top: 1.2em;
+        left: 1.7em;
+        font-size: 1.5em;
+      }
+      .score {
+        color: #ffff00;
+        font-size: 1.6em;
+        margin-left: 0.5em;
+      }
+      #lifes-counter {
+        position: absolute;
+        top: 1.2em;
+        right: 1.5em;
+      }
+      .life {
+        width: 25px;
+        margin: 0.8em;
+      }
 		</style>
 	</head>
 	<body>
     <div id="pacman-3d">
+      <div id="game-score"></div>
+      <div id="lifes-counter"></div>
       <script type="module" src="js/index.js"></script>
     </div>
 	</body>
