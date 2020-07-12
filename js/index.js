@@ -73,6 +73,7 @@ var BOTTOM = new THREE.Vector3(0, -1, 0);
 var _lookAt = new THREE.Vector3();
 var keys;
 var delta = 0.02;
+var remove = [];
 var cameraFP = true;
 var cancelChangeCamera = false;
 var lifesCounter = 3;
@@ -98,7 +99,7 @@ var LEVEL = [
   '          # . # #         G           # # . #          ',
   '          # . # #   # # # # # # # #   # # . #          ',
   '# # # # # # . # #   #             #   # # . # # # # # #',
-  '            P       #             #       .            ',
+  '          o P       #             #       .            ',
   '# # # # # # . # #   #             #   # # . # # # # # #',
   '          # . # #   # # # # # # # #   # # . #          ',
   '          # . # #                     # # . #          ',
@@ -446,7 +447,7 @@ function createPacman(skeleton) {
 }
 
 function createGhost(skeleton, color) {
-  const { x, y, z } = skeleton;
+  const { z } = skeleton;
   var heightCylinder = GHOST_RADIUS;
   var material = new THREE.MeshPhongMaterial({ color, side: THREE.DoubleSide });
 
@@ -463,7 +464,7 @@ function createGhost(skeleton, color) {
   ghost.position.copy(skeleton);
   ghost.direction = new THREE.Vector3(-1, 0, 0);
   ghost.hasLimit = true;
-  ghost.isGhost = true;
+  ghost.isAfraid = false;
 
   scene.add(ghost);
   return ghost;
@@ -474,7 +475,7 @@ function createDot() {
   var texture = new THREE.TextureLoader().load("textures/coin_texture.jpg");
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set( 4, 4 );
+  texture.repeat.set(4, 4);
   var coinMaterial = new THREE.MeshLambertMaterial({ map: texture });
   var dot = new THREE.Mesh(coinGeometry, coinMaterial);
   dot.isDot = true;
@@ -573,7 +574,6 @@ function movePacman() {
   pacman.ateBigDot = false;
   if (obj && obj.isBigDot === true && obj.visible === true) {
     removeObjAtMap(map, pacman.position);
-    updateLifesCounter(); //--------- SÓ PARA TESTE
     pacman.ateBigDot = true;
   }
 }
@@ -586,16 +586,16 @@ function updatePacman(now) {
     won = true;
     console.log('[GAME] YOU WON!');
   }
-  
-  // ---[TODO] !!!!! RESETAR CENA SE won = true
 
-  if (lost && lifesCounter > 0 && now - lostTime > 4) {
-    //now - lostTime > 4 - resetar pacman depois de 4 segundos que ele morreu
+  if (lost && lifesCounter > 0) {
+    // [no if] && now - lostTime > 4 - resetar pacman depois de 4 segundos que ele morreu
     lost = false;
     pacman.distanceMoved = 0;
     pacman.position.copy(map.pacmanSkeleton);
     pacman.direction.copy(LEFT);
   }
+
+  // ---[TODO] !!!!! RESETAR CENA SE won = true
 }
 
 function createKeyState() {
@@ -623,7 +623,8 @@ function createKeyState() {
 }
 
 function showGhostAtMap(now) {
-  if (numGhosts < 4 && now - ghostSpawnTime > 8) {
+  console.log('numGhosts', numGhosts);
+  if (numGhosts >= 0 && numGhosts < 4 && now - ghostSpawnTime > 8) {
     ghosts.push(createGhost(map.ghostSkeleton, colorsGhost[numGhosts]));
     numGhosts += 1;
     ghostSpawnTime = now;
@@ -669,9 +670,42 @@ function moveGhost(ghost) {
   }
 }
 
-function updateGhost(ghost, now) {
+function updateGhost(ghost, idxGhost, now) {
   moveGhost(ghost);
   animateFloatGhost(ghost);
+
+  // se o pacman comer um bigDot - os fantasmas ficam com medo
+  if (pacman.ateBigDot === true) {
+    ghost.isAfraid = true;
+    ghost.becameAfraidTime = now;
+    ghost.children[0].material.color = new THREE.Color(0xFFFFFF);
+    ghost.children[1].material.color = new THREE.Color(0xFFFFFF);
+  }
+
+  // fantasmas não tem mais medo depois de 10 segundos
+  if (ghost.isAfraid && now - ghost.becameAfraidTime > 10) {
+    ghost.isAfraid = false;
+    ghost.children[0].material.color = new THREE.Color(colorsGhost[idxGhost]);
+    ghost.children[1].material.color = new THREE.Color(colorsGhost[idxGhost]);
+  }
+
+  // checar a colisão entre pacman e fantasma
+  var difference = new THREE.Vector3();
+  difference.copy(pacman.position).sub(ghost.position);
+
+  if (!lost && !won && difference.length() < PACMAN_RADIUS + GHOST_RADIUS) {
+    if (ghost.isAfraid === true) {
+      remove.push(ghost);
+      // numGhosts -= 1; // AJEITAR AQUI
+    } else {
+      // updateLifesCounter(); // AJEITAR AQUI
+      lost = true;
+      lostTime = now;
+
+      if (lifesCounter > 0) console.log('[GAME] YOU DIED!');
+      else console.log('[GAME] GAME OVER!');
+    }
+  }
 }
 
 // /\/\/\/\/\/\/\/\  general animate scene  /\/\/\/\/\/\/\/\
@@ -708,8 +742,19 @@ function animateScene() {
     scene.children.forEach(obj => {
       if (obj.hasLimit === true)
         fixObjectLimit(obj, map);
-      if (obj.isGhost === true) 
-        updateGhost(obj, now);
+    });
+    
+    ghosts.map((ghost, idx) => updateGhost(ghost, idx, now));
+
+    // [TODO] Colocar em uma função
+    remove.forEach(scene.remove, scene);
+    remove.map(item => {
+      console.log('1');
+      if (remove.hasOwnProperty(item)) {
+        console.log('2');
+        scene.remove(remove[item]);
+        delete remove[item];
+      }
     });
   }
 
