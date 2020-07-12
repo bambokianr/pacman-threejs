@@ -140,7 +140,6 @@ function initApp() {
     createInitialPerspectiveCamera();
     createGLTFLoader();
     createFontLoader();
-
     animateScene();
   } else if(webGLExists === false) {
     alert("Your browser doesn't support WebGL.");
@@ -599,6 +598,14 @@ function createKeyState() {
   return keyState;
 }
 
+function showGhostAtMap(now) {
+  if (numGhosts < 4 && now - ghostSpawnTime > 8) {
+    ghosts.push(createGhost(map.ghostSkeleton, colorsGhost[numGhosts]));
+    numGhosts += 1;
+    ghostSpawnTime = now;
+  } 
+}
+
 function moveGhost(ghost) {
   var previousPosition = new THREE.Vector3();
   var currentPosition = new THREE.Vector3();
@@ -671,20 +678,14 @@ function animateScene() {
       updateFirstPersonCamera();
     changeCameraView();
     animateMouthPacman();
+    showGhostAtMap(now);
     movePacman();
-
-    if (numGhosts < 4 && now - ghostSpawnTime > 8) {
-      ghosts.push(createGhost(map.ghostSkeleton, colorsGhost[numGhosts]));
-      numGhosts += 1;
-      ghostSpawnTime = now;
-    } 
 
     scene.children.forEach(obj => {
       if (obj.isWrapper === true)
         fixObjectLimit(obj, map);
-      if (obj.isGhost === true) {
+      if (obj.isGhost === true) 
         updateGhost(obj, now);
-      }
     });
   }
 

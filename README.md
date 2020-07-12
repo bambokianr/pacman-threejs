@@ -151,7 +151,7 @@ Mudou-se o formato do objeto para um cubo. Assim, definiu-se as functions vertex
 -- **`function createGameScore()`** && -- **`function createLifesCounter()`** 
 Funções que inicializam o placar do jogo e a quantidade de vidas, respectivamente. A partir do JavaScript, são buscados os elementos correspondentes a partir do seu 'id' - #game-score e #lifes-counter - e inseridos então dinamicamente na árvore de elementos HTML - DOM. Assim, com o carregamento da cena, as `divs` correspondentes são rendezidas a partir do código dos métodos `createGameScore` e `createLifesCounter`.
 
--- **`function updateGameScore(value)`** ????
+-- **`function updateGameScore(value)`** ???? 
 
 -- **`function updateLifesCounter()`** ???? 
 
@@ -182,3 +182,9 @@ Verifica se a posição `pos` como argumento é válida no mapa e retorna o obje
 
 -- **`function removeObjAtMap(map, pos)`** 
 A partir do atributo `pos`, torna a propriedade `visible = false` do objeto no mapa para essa posição. 
+
+-- **`function showGhostAtMap(now)`** ???? 
+
+-- **`function moveGhost(ghost)`** ???? 
+
+-- **`function updateGhost(ghost, now)`** ???? 
