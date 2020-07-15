@@ -507,6 +507,7 @@ function createDot() {
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(4, 4);
   var coinMaterial = new THREE.MeshLambertMaterial({ map: texture });
+  // var coinMaterial = new THREE.MeshPhongMaterial({color: 0xffff00});
   var dot = new THREE.Mesh(coinGeometry, coinMaterial);
   dot.isDot = true;
 
@@ -801,6 +802,6 @@ function animateScene() {
 
   renderer.setViewport(0, 0, renderer.domElement.width, renderer.domElement.height);
   renderer.render(scene, camera);
-
-  if (enterPressed === true) renderHudCamera();
+  
+  // if (enterPressed === true) renderHudCamera();
 };
