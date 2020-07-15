@@ -73,7 +73,8 @@ var BOTTOM = new THREE.Vector3(0, -1, 0);
 var _lookAt = new THREE.Vector3();
 var keys;
 var delta = 0.02;
-var remove = [];
+var toRemove = [];
+var whoAte = [];
 var cameraFP = true;
 var cancelChangeCamera = false;
 var lifesCounter = 3;
@@ -402,12 +403,22 @@ function getObjAtMap(map, pos) {
   return map[y] && map[y][x];
 }
 
-function removeObjAtMap(map, pos) {
+function makeInvisibleObjAtMap(map, pos) {
   var x = Math.round(pos.x);
   var y = Math.round(pos.y);
 
   if (map[y] && map[y][x]) 
     map[y][x].visible = false;
+}
+
+function removeObjAtMap() {
+  toRemove.forEach(scene.remove, scene);
+  toRemove.map(item => {
+    if (toRemove.hasOwnProperty(item)) {
+      scene.remove(toRemove[item]);
+      delete toRemove[item];
+    }
+  });
 }
 
 function createWallMaze() {
@@ -518,7 +529,7 @@ function animateFloatGhost(ghost) {
   const deltaY = 0.2;
 
   if (frames % framesInterval === 0) {
-    posYGhost = Math.round((posYGhost + signalGhost*0.05) * 100) / 100;
+    posYGhost = Math.round((posYGhost + signalGhost * 0.05) * 100) / 100;
     scene.remove(ghost);
     ghost.position.z = posYGhost;
     scene.add(ghost);
@@ -550,7 +561,7 @@ function movePacman() {
     pacman.distanceMoved += PACMAN_SPEED * delta;
   }
 
-  // [TODO] - explicar essa parte no README.md
+  // ??? [TODO] - explicar essa parte no README.md
   var leftSide = pacman.position.clone().addScaledVector(LEFT, PACMAN_RADIUS).round();
   var topSide = pacman.position.clone().addScaledVector(TOP, PACMAN_RADIUS).round();
   var rightSide = pacman.position.clone().addScaledVector(RIGHT, PACMAN_RADIUS).round();
@@ -567,13 +578,13 @@ function movePacman() {
 
   var obj = getObjAtMap(map, pacman.position);
   if (obj && obj.isDot === true && obj.visible === true) {
-    removeObjAtMap(map, pacman.position);
+    makeInvisibleObjAtMap(map, pacman.position);
     numDotsEaten += 1;
     updateGameScore(5);
   }
   pacman.ateBigDot = false;
   if (obj && obj.isBigDot === true && obj.visible === true) {
-    removeObjAtMap(map, pacman.position);
+    makeInvisibleObjAtMap(map, pacman.position);
     pacman.ateBigDot = true;
   }
 }
@@ -588,14 +599,14 @@ function updatePacman(now) {
   }
 
   if (lost && lifesCounter > 0) {
-    // [no if] && now - lostTime > 4 - resetar pacman depois de 4 segundos que ele morreu
-    lost = false;
-    pacman.distanceMoved = 0;
-    pacman.position.copy(map.pacmanSkeleton);
-    pacman.direction.copy(LEFT);
+    toRemove.push(pacman);
+    if (now - lostTime > 2) { // ??? pacman é reconstruído depois de x segundos que morreu 
+      pacman = createPacman(map.pacmanSkeleton);
+      lost = false;
+    }
   }
 
-  // ---[TODO] !!!!! RESETAR CENA SE won = true
+  // !!! [TODO] RESETAR CENA SE won = true E MOSTRAR AVISO DE YOU WON
 }
 
 function createKeyState() {
@@ -623,7 +634,6 @@ function createKeyState() {
 }
 
 function showGhostAtMap(now) {
-  console.log('numGhosts', numGhosts);
   if (numGhosts >= 0 && numGhosts < 4 && now - ghostSpawnTime > 8) {
     ghosts.push(createGhost(map.ghostSkeleton, colorsGhost[numGhosts]));
     numGhosts += 1;
@@ -641,7 +651,7 @@ function moveGhost(ghost) {
   ghost.translateOnAxis(ghost.direction, delta * GHOST_SPEED);
   currentPosition.copy(ghost.position).addScaledVector(ghost.direction, 0.5).round();
 
-  // verifica se a posição anterior não é igual a atual - se não está "encurralado"?
+  // ??? verifica se a posição anterior não é igual a atual - se não está "encurralado"?
   if (!currentPosition.equals(previousPosition)) {
     leftTurn.copy(ghost.direction).applyAxisAngle(UP, Math.PI / 2);
     rightTurn.copy(ghost.direction).applyAxisAngle(UP, -Math.PI / 2);
@@ -650,31 +660,33 @@ function moveGhost(ghost) {
     var leftWall = isWall(map, currentPosition.copy(ghost.position).add(leftTurn));
     var rightWall = isWall(map, currentPosition.copy(ghost.position).add(rightTurn));
 
-    // não existe parede lateral, então pode virar 90 graus tanto para a esquerda quanto para a direita
+    // ??? não existe parede lateral, então pode virar 90 graus tanto para a esquerda quanto para a direita
     if (!leftWall || !rightWall) {
-      // se o fantasma puder girar, escolha aleatoriamente um das direções possíveis
+      // ??? se o fantasma puder girar, escolha aleatoriamente um das direções possíveis
       var possibleTurns = [];
       if (!forwardWall) possibleTurns.push(ghost.direction);
       if (!leftWall) possibleTurns.push(leftTurn);
       if (!rightWall) possibleTurns.push(rightTurn);
 
-      // if (possibleTurns.length === 0)
-      //     throw new Error('A ghost got stuck!');
-
       var newDirection = possibleTurns[Math.floor(Math.random() * possibleTurns.length)];
       ghost.direction.copy(newDirection);
 
-      // posicionar o fantasma numa posição inteira e seguir com a movimentação em uma nova direção
+      // ??? posicionar o fantasma numa posição inteira e seguir com a movimentação em uma nova direção
       ghost.position.round().addScaledVector(ghost.direction, delta);
     }
   }
 }
 
-function updateGhost(ghost, idxGhost, now) {
+function updateGhost(ghost, idxGhost, now, frames) {
   moveGhost(ghost);
   animateFloatGhost(ghost);
 
-  // se o pacman comer um bigDot - os fantasmas ficam com medo
+  // ??? remove todos os ghosts do vetor para que possa ser contabilizado novamente em livesCounter caso um ghost que já comeu o pacman coma-o de novo
+  if (frames % 50 === 0) {
+    whoAte = [];
+  }
+
+  // ??? se o pacman comer um bigDot - os fantasmas ficam com medo
   if (pacman.ateBigDot === true) {
     ghost.isAfraid = true;
     ghost.becameAfraidTime = now;
@@ -682,28 +694,42 @@ function updateGhost(ghost, idxGhost, now) {
     ghost.children[1].material.color = new THREE.Color(0xFFFFFF);
   }
 
-  // fantasmas não tem mais medo depois de 10 segundos
+  // ??? fantasmas não tem mais medo depois de 10 segundos
   if (ghost.isAfraid && now - ghost.becameAfraidTime > 10) {
     ghost.isAfraid = false;
     ghost.children[0].material.color = new THREE.Color(colorsGhost[idxGhost]);
     ghost.children[1].material.color = new THREE.Color(colorsGhost[idxGhost]);
   }
 
-  // checar a colisão entre pacman e fantasma
+  // ??? checar a colisão entre pacman e fantasma
   var difference = new THREE.Vector3();
   difference.copy(pacman.position).sub(ghost.position);
 
   if (!lost && !won && difference.length() < PACMAN_RADIUS + GHOST_RADIUS) {
     if (ghost.isAfraid === true) {
-      remove.push(ghost);
-      // numGhosts -= 1; // AJEITAR AQUI
+      var toRemoveFiltered = toRemove.filter(item => item === ghost);
+      if (toRemoveFiltered.length === 0) {
+        numGhosts -= 1;
+        toRemove.push(ghost);
+      }
     } else {
-      // updateLifesCounter(); // AJEITAR AQUI
+      var whoAteFiltered = whoAte.filter(item => item === ghost);
+      if (whoAteFiltered.length === 0) {
+        updateLifesCounter();
+        whoAte.push(ghost);
+      }
+      
       lost = true;
       lostTime = now;
 
-      if (lifesCounter > 0) console.log('[GAME] YOU DIED!');
-      else console.log('[GAME] GAME OVER!');
+      if (lifesCounter > 0) {
+        // !!! [TODO] MOSTRAR AVISO DE YOU DIED
+        console.log('[GAME] YOU DIED!');
+      }
+      else {
+        // !!! [TODO] MOSTRAR AVISO DE GAME OVER E RESETAR CENA
+        console.log('[GAME] GAME OVER!');
+      }
     }
   }
 }
@@ -731,9 +757,7 @@ function animateScene() {
     }
   } else {
     var now = window.performance.now() / 1000;
-    
-    if (cameraFP)
-      updateFirstPersonCamera();
+    if (cameraFP) updateFirstPersonCamera();
     changeCameraView();
     animateMouthPacman();
     showGhostAtMap(now);
@@ -744,18 +768,8 @@ function animateScene() {
         fixObjectLimit(obj, map);
     });
     
-    ghosts.map((ghost, idx) => updateGhost(ghost, idx, now));
-
-    // [TODO] Colocar em uma função
-    remove.forEach(scene.remove, scene);
-    remove.map(item => {
-      console.log('1');
-      if (remove.hasOwnProperty(item)) {
-        console.log('2');
-        scene.remove(remove[item]);
-        delete remove[item];
-      }
-    });
+    ghosts.map((ghost, idx) => updateGhost(ghost, idx, now, frames));
+    removeObjAtMap();
   }
 
   renderer.render(scene, camera);

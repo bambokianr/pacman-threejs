@@ -180,7 +180,7 @@ Retorna o objeto no mapa `map`, representado na posição `[y][x] = [Math.round(
 -- **`function isWall(map, pos)`** 
 Verifica se a posição `pos` como argumento é válida no mapa e retorna o objeto correpondente a partir da função `getObjAtMap`. Assim, é possível avaliar se o objeto `obj` é uma 'WallMaze' ao verificar a propriedade `obj.isWall`.
 
--- **`function removeObjAtMap(map, pos)`** 
+-- **`function makeInvisibleObjAtMap(map, pos)`** 
 A partir do atributo `pos`, torna a propriedade `visible = false` do objeto no mapa para essa posição. 
 
 -- **`function showGhostAtMap(now)`** ???? 
