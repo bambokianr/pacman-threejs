@@ -75,7 +75,7 @@ var keys;
 var delta = 0.02;
 var toRemove = [];
 var whoAte = [];
-var hudCamera;
+// var hudCamera;
 var cameraFP = true;
 var cancelChangeCamera = false;
 var lifesCounter = 3;
@@ -84,8 +84,41 @@ var lost = false;
 var lostTime, wonTime;
 var gameScore = 0;
 var numGhosts = 0;
-var ghostSpawnTime = -8;
+var ghostCreationTime = -8;
 var numDotsEaten = 0;
+var LEVELTEST = [
+  '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
+  '#                         # #                         #',
+  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
+  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
+  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
+  '#                                                     #',
+  '#   # # # #   # #   # # # # # # # #   # #   # # # #   #',
+  '#   # # # #   # #   # # # # # # # #   # #   # # # #   #',
+  '#             # #         # #         # #             #',
+  '# # # # # #   # # # # #   # #   # # # # #   # # # # # #',
+  '          #   # # # # #   # #   # # # # #   #          ',
+  '          #   # #         G           # #   #          ',
+  '          #   # #   # # # # # # # #   # #   #          ',
+  '# # # # # #   # #   #             #   # #   # # # # # #',
+  '          . P       #             #                    ',
+  '# # # # # #   # #   #             #   # #   # # # # # #',
+  '          #   # #   # # # # # # # #   # #   #          ',
+  '          #   # #                     # #   #          ',
+  '          #   # #   # # # # # # # #   # #   #          ',
+  '# # # # # #   # #   # # # # # # # #   # #   # # # # # #',
+  '#                         # #                         #',
+  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
+  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
+  '#       # #                                 # #       #',
+  '# # #   # #   # #   # # # # # # # #   # #   # #   # # #',
+  '# # #   # #   # #   # # # # # # # #   # #   # #   # # #',
+  '#             # #         # #         # #             #',
+  '#   # # # # # # # # # #   # #   # # # # # # # # # #   #',
+  '#   # # # # # # # # # #   # #   # # # # # # # # # #   #',
+  '#                                                     #',
+  '# # # # # # # # # # # # # # # # # # # # # # # # # # # #'
+];
 var LEVEL = [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
   '# . . . . . . . . . . . . # # . . . . . . . . . . . . #',
@@ -249,13 +282,32 @@ function initGame() {
     keys = createKeyState(); 
     map = createMap(LEVEL);
     pacman = createPacman(map.pacmanSkeleton);
-    createHudCamera();
+    // createHudCamera();
     createLifesCounter();
     createGameScore();
     animateScene();
   } else if(webGLExists === false) {
     alert("Your browser doesn't support WebGL.");
   }
+}
+
+function reloadGame() {
+  while(scene.children.length > 0)  
+    scene.remove(scene.children[0]); 
+  
+  won = false;
+  lost = false;
+  wonTime = 0;
+  lostTime = 0;
+  gameScore = 0;
+  numGhosts = 0;
+  ghostCreationTime = -8;
+  numDotsEaten = 0;
+
+  createGameScene();
+  map = createMap(LEVEL);
+  pacman = createPacman(map.pacmanSkeleton);
+  animateScene();
 }
 
 function createGameScene() {
@@ -284,6 +336,37 @@ function createFirstPersonCamera() {
   camera.lookAtPosition = new THREE.Vector3();
 }
 
+function updateFirstPersonCamera() {
+  if (won) {
+    // ??? ao vencer, a câmera é deslocada para mostrar todo o mapa / labirinto
+    camera.targetPosition.set(map.centerX, map.centerY, 30);
+    camera.targetLookAt.set(map.centerX, map.centerY, 0);
+  } else if (lost) {
+    // ??? ao perder uma vida ou o jogo, move a câmera para visualizar o pacman de cima
+    camera.targetPosition = pacman.position.clone().addScaledVector(UP, 4);
+    camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 0.01);
+  } else {
+    // ??? câmera acima e atrás do pacman, olhando na mesma direção
+    camera.targetPosition.copy(pacman.position).addScaledVector(UP, 1.5).addScaledVector(pacman.direction, -1);
+    camera.targetLookAt.copy(pacman.position).add(pacman.direction);
+  }
+
+  // ??? mover câmera devagar em caso de lost ou won
+  var cameraSpeed = (lost || won) ? 1 : 10;
+  camera.position.lerp(camera.targetPosition, delta * cameraSpeed);
+  camera.lookAtPosition.lerp(camera.targetLookAt, delta * cameraSpeed);
+  camera.lookAt(camera.lookAtPosition);
+}
+
+function changeCameraView() {
+  if (keys['C']) {
+    if (!cancelChangeCamera) {
+      if (cameraFP) createGamePerspectiveCamera();
+      else createFirstPersonCamera();
+      cancelChangeCamera = true;
+    }
+  } else cancelChangeCamera = false;
+}
 function createHudCamera() {
   var halfWidth = (map.right - map.left) / 2, halfHeight = (map.top - map.bottom) / 2;
   hudCamera = new THREE.OrthographicCamera(-halfWidth, halfWidth, halfHeight, -halfHeight, 1, 100);
@@ -298,24 +381,6 @@ function renderHudCamera() {
   renderer.setViewport(10, 10, 200, 200);
   renderer.render(scene, hudCamera);
   renderer.enableScissorTest(false);
-}
-
-function updateFirstPersonCamera() {
-  camera.targetPosition.copy(pacman.position).addScaledVector(UP, 1.5).addScaledVector(pacman.direction, -1);
-  camera.targetLookAt.copy(pacman.position).add(pacman.direction);
-  camera.position.lerp(camera.targetPosition, 0.2);
-  camera.lookAtPosition.lerp(camera.targetLookAt, 0.2);
-  camera.lookAt(camera.lookAtPosition);
-}
-
-function changeCameraView() {
-  if (keys['C']) {
-    if (!cancelChangeCamera) {
-      if (cameraFP) createGamePerspectiveCamera();
-      else createFirstPersonCamera();
-      cancelChangeCamera = true;
-    }
-  } else cancelChangeCamera = false;
 }
 
 function createGameScore() {
@@ -615,25 +680,54 @@ function updatePacman(now) {
 
   if (!won && numDotsEaten === map.numDots) {
     won = true;
+    wonTime = now;
     console.log('[GAME] YOU WON!');
   }
-
-  if (lost && lifesCounter > 0) {
-    pacman.visible = false;
-    // toRemove.push(pacman);
-    if (now - lostTime > 2) { 
-      // ??? pacman é reconstruído depois de x segundos que morreu 
-      // ??? não foi usado createPacman pq updatePacman é chamado dentro do loop - animateScene 
-      // pacman = createPacman(map.pacmanSkeleton);
-      pacman.visible = true;
-      pacman.position.copy(map.pacmanSkeleton);
-      pacman.direction.copy(LEFT);
-      pacman.distanceMoved = 0;
-      lost = false;
-    }
+  
+  // !!! [TODO] RESETAR CENA SE won = true E MOSTRAR AVISO DE YOU WON
+  if (won && now - wonTime > 3) {
+    reloadGame();
   }
 
-  // !!! [TODO] RESETAR CENA SE won = true E MOSTRAR AVISO DE YOU WON
+  // if (lost && lifesCounter > 0) {
+  //   // pacman.visible = false;
+  //   // toRemove.push(pacman);
+  //   if (now - lostTime > 2) { 
+  //     // ??? pacman é reconstruído depois de x segundos que morreu 
+  //     // ??? não foi usado createPacman pq updatePacman é chamado dentro do loop - animateScene 
+  //     // pacman = createPacman(map.pacmanSkeleton);
+  //     pacman.visible = true;
+  //     pacman.position.copy(map.pacmanSkeleton);
+  //     pacman.direction.copy(LEFT);
+  //     pacman.distanceMoved = 0;
+  //     lost = false;
+  //   }
+  // }
+
+  if (lost && lifesCounter > 0 && now - lostTime > 3) {
+    lost = false;
+    pacman.position.copy(map.pacmanSkeleton);
+    pacman.direction.copy(LEFT);
+    pacman.distanceMoved = 0;
+  }
+
+  // !!! CORRIGIR AQUI
+  if (lost) {
+    // If pacman got eaten, show dying animation.
+    var angle = (now - lostTime) * Math.PI / 2;
+    var frame = Math.min(pacman.frames.length - 1, Math.floor(angle / Math.PI * pacman.frames.length));
+
+    pacman.geometry = pacman.frames[frame];
+  } else {
+    // Otherwise, show eating animation based on how much pacman has moved.
+    var maxAngle = Math.PI / 4;
+    var angle = (pacman.distanceMoved * 2) % (maxAngle * 2);
+    if (angle > maxAngle)
+        angle = maxAngle * 2 - angle;
+    var frame = Math.floor(angle / Math.PI * pacman.frames.length);
+
+    pacman.geometry = pacman.frames[frame];
+  }
 }
 
 function createKeyState() {
@@ -661,10 +755,10 @@ function createKeyState() {
 }
 
 function showGhostAtMap(now) {
-  if (numGhosts >= 0 && numGhosts < 4 && now - ghostSpawnTime > 8) {
+  if (numGhosts >= 0 && numGhosts < 4 && now - ghostCreationTime > 8) {
     ghosts.push(createGhost(map.ghostSkeleton, colorsGhost[numGhosts]));
     numGhosts += 1;
-    ghostSpawnTime = now;
+    ghostCreationTime = now;
   } 
 }
 
@@ -756,6 +850,7 @@ function updateGhost(ghost, idxGhost, now, frames) {
       else {
         // !!! [TODO] MOSTRAR AVISO DE GAME OVER E RESETAR CENA
         console.log('[GAME] GAME OVER!');
+        reloadGame();
       }
     }
   }
