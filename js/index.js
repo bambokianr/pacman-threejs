@@ -289,28 +289,15 @@ function createHudCamera() {
   hudCamera = new THREE.OrthographicCamera(-halfWidth, halfWidth, halfHeight, -halfHeight, 1, 100);
   hudCamera.position.copy(new THREE.Vector3(map.centerX, map.centerY, 10));
   hudCamera.lookAt(new THREE.Vector3(map.centerX, map.centerY, 0));
-
-  // return hudCamera;
 }
 
 function renderHudCamera() {
-  // ??? aumentando os tamanhos tanto do pacman quanto dos dots para melhorar a visualização
-  // scene.children.forEach(function (object) {
-  //   if (object.isWall !== true)
-  //     object.scale.set(2.5, 2.5, 2.5);
-  // });
-
   // ??? renderizar o mapa 200x200 no canto inferior esquerdo da tela
   renderer.enableScissorTest(true);
   renderer.setScissor(10, 10, 200, 200);
   renderer.setViewport(10, 10, 200, 200);
   renderer.render(scene, hudCamera);
   renderer.enableScissorTest(false);
-
-  // ??? resetando escala depois de renderizar a hudCamera
-  // scene.children.forEach(function (object) {
-  //   object.scale.set(1, 1, 1);
-  // });
 }
 
 function updateFirstPersonCamera() {
@@ -815,5 +802,5 @@ function animateScene() {
   renderer.setViewport(0, 0, renderer.domElement.width, renderer.domElement.height);
   renderer.render(scene, camera);
 
-  // if (enterPressed === true) renderHudCamera();
+  if (enterPressed === true) renderHudCamera();
 };
