@@ -292,6 +292,7 @@ function initGame() {
 }
 
 function reloadGame() {
+  //!! ver se os fantasmas estão sendo removidos
   while(scene.children.length > 0)  
     scene.remove(scene.children[0]); 
   
@@ -299,9 +300,9 @@ function reloadGame() {
   lost = false;
   wonTime = 0;
   lostTime = 0;
+  lifesCounter = 3;
   gameScore = 0;
   numGhosts = 0;
-  ghostCreationTime = -8;
   numDotsEaten = 0;
 
   createGameScene();
@@ -320,11 +321,28 @@ function createGameScene() {
 
 function createGamePerspectiveCamera() {
   cameraFP = false;
-  camera = new THREE.PerspectiveCamera(60, canvasWidth / canvasHeight, 0.1, 100);
-  camera.position.set(0, -40, 50);
-  camera.lookAt(scene.position);
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableRotate = false;
+  camera = new THREE.PerspectiveCamera(75, canvasWidth / canvasHeight, 0.1, 100);
+  
+  camera.targetPosition = new THREE.Vector3();
+  camera.targetLookAt = new THREE.Vector3();
+  camera.lookAtPosition = new THREE.Vector3();
+
+  // camera.position.set(0, -40, 50);
+  // camera.lookAt(scene.position);
+  // controls = new THREE.OrbitControls(camera, renderer.domElement);
+  // controls.enableRotate = false;
+}
+
+function updateGamePerspectiveCamera() {
+  //! olhando de cima sempre na direção do pacman
+  camera.targetPosition = pacman.position.clone().addScaledVector(UP, 6);
+  camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 0.01);
+  // camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 90*Math.PI/180);
+
+  var cameraSpeed = 10;
+  camera.position.lerp(camera.targetPosition, delta * cameraSpeed);
+  camera.lookAtPosition.lerp(camera.targetLookAt, delta * cameraSpeed);
+  camera.lookAt(camera.lookAtPosition);
 }
 
 function createFirstPersonCamera() {
@@ -338,20 +356,16 @@ function createFirstPersonCamera() {
 
 function updateFirstPersonCamera() {
   if (won) {
-    // ??? ao vencer, a câmera é deslocada para mostrar todo o mapa / labirinto
     camera.targetPosition.set(map.centerX, map.centerY, 30);
     camera.targetLookAt.set(map.centerX, map.centerY, 0);
   } else if (lost) {
-    // ??? ao perder uma vida ou o jogo, move a câmera para visualizar o pacman de cima
     camera.targetPosition = pacman.position.clone().addScaledVector(UP, 4);
     camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 0.01);
   } else {
-    // ??? câmera acima e atrás do pacman, olhando na mesma direção
     camera.targetPosition.copy(pacman.position).addScaledVector(UP, 1.5).addScaledVector(pacman.direction, -1);
     camera.targetLookAt.copy(pacman.position).add(pacman.direction);
   }
 
-  // ??? mover câmera devagar em caso de lost ou won
   var cameraSpeed = (lost || won) ? 1 : 10;
   camera.position.lerp(camera.targetPosition, delta * cameraSpeed);
   camera.lookAtPosition.lerp(camera.targetLookAt, delta * cameraSpeed);
@@ -367,6 +381,8 @@ function changeCameraView() {
     }
   } else cancelChangeCamera = false;
 }
+
+// ???? TALVEZ REMOVER FUNÇÕES createHudCamera E renderHudCamera
 function createHudCamera() {
   var halfWidth = (map.right - map.left) / 2, halfHeight = (map.top - map.bottom) / 2;
   hudCamera = new THREE.OrthographicCamera(-halfWidth, halfWidth, halfHeight, -halfHeight, 1, 100);
@@ -396,8 +412,7 @@ function createGameScore() {
 
 function updateGameScore(value) {
   gameScore += value;
-  if (gameScore > 0) 
-    document.getElementById('game-score').getElementsByClassName('score')[0].innerHTML = gameScore;
+  document.getElementById('game-score').getElementsByClassName('score')[0].innerHTML = gameScore;
 }
 
 function createLifesCounter() {
@@ -429,7 +444,6 @@ function createMap(levelDef) {
 
   var x, y;
   for (var row = 0; row < levelDef.length; row++) {
-    // y = -row + (levelDef.length - 3) / 2;
     y = -row;
     map[y] = {};
 
@@ -437,7 +451,6 @@ function createMap(levelDef) {
     map.right = Math.max(map.right, length);
 
     for (var column = 0; column < levelDef[row].length; column += 2) {
-      // x = Math.floor(column / 2) + (2 - levelDef.length/2);
       x = Math.floor(column / 2);
       var cell = levelDef[row][column];
       var object = null;
@@ -572,7 +585,6 @@ function createDot() {
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(4, 4);
   var coinMaterial = new THREE.MeshLambertMaterial({ map: texture });
-  // var coinMaterial = new THREE.MeshPhongMaterial({color: 0xffff00});
   var dot = new THREE.Mesh(coinGeometry, coinMaterial);
   dot.isDot = true;
 
@@ -581,7 +593,7 @@ function createDot() {
 
 function createBigDot() {
   let geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-  let material =  new THREE.ShaderMaterial({
+  let material = new THREE.ShaderMaterial({
     vertexShader: vertexShaderBigDot,
     fragmentShader: fragmentShaderBigDot,
     uniforms: uniformsBigDot,
@@ -880,8 +892,9 @@ function animateScene() {
   } else {
     var now = window.performance.now() / 1000;
     if (cameraFP) updateFirstPersonCamera();
+    else updateGamePerspectiveCamera();
     changeCameraView();
-    // animateMouthPacman(); // ??? não dá nem pra ver :((
+    animateMouthPacman();
     showGhostAtMap(now);
     updatePacman(now);
 

@@ -147,13 +147,43 @@ Mudou-se o formato do objeto para um cubo. Assim, definiu-se as functions vertex
 ### :three: Tarefa 3
 ///// Comentando as funções que começaram a ser implementadas
 
+-- **`function reloadGame()`** 
+Função chamada sempre que `lost === true && lifesCounter === 0` ou `won === true && numDotsEaten === map.numDots`. Remove todos os objetos da cena de jogo e os reconstrói novamente para iniciar uma nova partida, chamando também a função `animateScene`, responsável pela atualização dos frames em cena. Também redefine as variáveis do jogo.
+
+-- **`function createGamePerspectiveCamera()`** [alteração na função inicial / implementação incompleta] 
+
+-- **`function updateGamePerspectiveCamera()`** [implementação incompleta] 
+
+-- **`function updateFirstPersonCamera()`** 
+Função já mencionada anteriormente. No entanto, ela foi aprimorada para cobrir os casos definidos abaixo.
+Ao vencer, ou seja, se `won === true`, a câmera é deslocada para uma posição final, mostrando o mapa a partir de uma vista superior. 
+```js
+camera.targetPosition.set(map.centerX, map.centerY, 30);
+camera.targetLookAt.set(map.centerX, map.centerY, 0);
+```
+
+Em caso de perda, ou seja, se `lost === false`, move-se a câmera de forma a mostrar o pacman e uma pequena área ao seu redor vistos superiormente.
+```js
+camera.targetPosition = pacman.position.clone().addScaledVector(UP, 4);
+camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 0.01);
+```
+
+O movimento da câmera (uso do método `lerp`), de sua posição no momento em que acontece `won === true` ou `lost === false` até a posição final definida nas descrições acima, acontece com uma velocidade mais lenta do que o movimento padrão (durante o jogo com o pacman) - `cameraSpeed = (lost || won) ? 1 : 10`.
 
 -- **`function createGameScore()`** && -- **`function createLifesCounter()`** 
 Funções que inicializam o placar do jogo e a quantidade de vidas, respectivamente. A partir do JavaScript, são buscados os elementos correspondentes a partir do seu 'id' - #game-score e #lifes-counter - e inseridos então dinamicamente na árvore de elementos HTML - DOM. Assim, com o carregamento da cena, as `divs` correspondentes são rendezidas a partir do código dos métodos `createGameScore` e `createLifesCounter`.
 
--- **`function updateGameScore(value)`** ???? 
+-- **`function updateGameScore(value)`** 
+Atualiza o score do jogo mostrado em tela após somar `value` à variável `gameScore`. A `div` com id #game-score tem seu innerHTML redefinido a partir do JavaScript.
+```js
+document.getElementById('game-score').getElementsByClassName('score')[0].innerHTML = gameScore;
+```
 
--- **`function updateLifesCounter()`** ???? 
+-- **`function updateLifesCounter()`** 
+Função chamada sempre que uma vida é perdida. Atualiza o número de vidas restantes do jogo mostrado em tela após decrementar 1 da variável `lifesCounter`. A `img` com classe .life criada dinamicamente em `createLifesCounter` tem seu estilo redefinido a partir do JavaScript.
+```js
+document.getElementsByClassName('life')[lifesCounter].style.display = 'none';
+```
 
 -- **`function fixObjectLimit(obj, map)`** 
 Trata o limite da posição de um objeto caso ele ultrapasse a área do mapa. Assim como no jogo oficial do PacMan, a lógica do código faz com que o objeto em questão apareça do lado oposto exatamente no mesmo eixo da posição em que saiu de uma extremidade do mapa. 
@@ -177,13 +207,30 @@ Obs: A propriedade `hasLimit` foi adicionada tanto ao 'pacman' quanto aos 'ghost
 -- **`function getObjAtMap(map, pos)`** 
 Retorna o objeto no mapa `map`, representado na posição `[y][x] = [Math.round(pos.y)][Math.round(pos.x)]`.
 
+VER SE ROLA DE USAR SÓ UMA DELAS - makeInvisibleObjAtMap ou removeObjAtMap
+-- **`function makeInvisibleObjAtMap(map, pos)`** 
+A partir do atributo `pos`, torna a propriedade `visible = false` do objeto no mapa para essa posição.
+
+-- **`function removeObjAtMap()`** ??? 
+
 -- **`function isWall(map, pos)`** 
 Verifica se a posição `pos` como argumento é válida no mapa e retorna o objeto correpondente a partir da função `getObjAtMap`. Assim, é possível avaliar se o objeto `obj` é uma 'WallMaze' ao verificar a propriedade `obj.isWall`.
 
--- **`function makeInvisibleObjAtMap(map, pos)`** 
-A partir do atributo `pos`, torna a propriedade `visible = false` do objeto no mapa para essa posição. 
+-- **`function movePacman()`** ??? 
 
--- **`function showGhostAtMap(now)`** ???? 
+-- **`function updatePacman(now)`** ??? 
+
+-- **`function showGhostAtMap(now)`** 
+Função que faz surgir um fantasma a cada intervalo de tempo definido até que se atinja a quantidade máxima de 4 fantasmas estipulada para o jogo. O mapa, representado na variável `LEVEL`, foi modificado para que exista apenas uma posição inicial de surgimento de um fantasma, salva então em `map.ghostSkeleton` assim que o método `createMap(LEVEL)` é executado. 
+`showGhostAtMap` recebe como parâmetro a variável `now`, definida por `window.performance.now() / 1000` no método `animateScene`, ou seja, é o tempo transcorrido em segundos desde que o contexto de execução foi criado - desde que a cena do jogo foi carregada inicialmente.
+Definindo inicialmente `ghostCreationTime = -8`, cada fantasma é então criado em intervalos de 8 segundos, seguindo a lógica abaixo.
+```js
+if (numGhosts >= 0 && numGhosts < 4 && now - ghostCreationTime > 8) {
+  ghosts.push(createGhost(map.ghostSkeleton, colorsGhost[numGhosts]));
+  numGhosts += 1;
+  ghostCreationTime = now;
+}
+```
 
 -- **`function moveGhost(ghost)`** ???? 
 
