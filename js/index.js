@@ -75,7 +75,6 @@ var keys;
 var delta = 0.02;
 var toRemove = [];
 var whoAte = [];
-// var hudCamera;
 var cameraFP = true;
 var cancelChangeCamera = false;
 var lifesCounter = 3;
@@ -392,23 +391,6 @@ function changeCameraView() {
       cancelChangeCamera = true;
     }
   } else cancelChangeCamera = false;
-}
-
-// ???? TALVEZ REMOVER FUNÇÕES createHudCamera E renderHudCamera
-function createHudCamera() {
-  var halfWidth = (map.right - map.left) / 2, halfHeight = (map.top - map.bottom) / 2;
-  hudCamera = new THREE.OrthographicCamera(-halfWidth, halfWidth, halfHeight, -halfHeight, 1, 100);
-  hudCamera.position.copy(new THREE.Vector3(map.centerX, map.centerY, 10));
-  hudCamera.lookAt(new THREE.Vector3(map.centerX, map.centerY, 0));
-}
-
-function renderHudCamera() {
-  // ??? renderizar o mapa 200x200 no canto inferior esquerdo da tela
-  renderer.enableScissorTest(true);
-  renderer.setScissor(10, 10, 200, 200);
-  renderer.setViewport(10, 10, 200, 200);
-  renderer.render(scene, hudCamera);
-  renderer.enableScissorTest(false);
 }
 
 function createGameScore() {
@@ -870,7 +852,7 @@ function updateGhost(ghost, idxGhost, now, frames) {
     if (ghost.isAfraid === true) {
       var toRemoveFiltered = toRemove.filter(item => item === ghost);
       if (toRemoveFiltered.length === 0) {
-        numGhosts -= 1;
+        // numGhosts -= 1;
         toRemove.push(ghost);
       }
     } else {
@@ -936,8 +918,5 @@ function animateScene() {
     removeObjAtMap();
   }
 
-  renderer.setViewport(0, 0, renderer.domElement.width, renderer.domElement.height);
   renderer.render(scene, camera);
-  
-  // if (enterPressed === true) renderHudCamera();
 };
