@@ -185,9 +185,8 @@ Função chamada sempre que uma vida é perdida. Atualiza o número de vidas res
 document.getElementsByClassName('life')[lifesCounter].style.display = 'none';
 ```
 
--- **`function removeInfosGameScore()`** ??? 
-
--- **`function removeInfosLifesCounter()`** ??? 
+-- **`function removeInfosGameScore()`** && -- **`function removeInfosLifesCounter()`** 
+Funções para remover as informações presentes nas `divs` com ids' #game-score e #lifes-counter, executadas no método `reloadGame`. A div com o id correspondente é removida dinamicamente com o método `parentNode.removeChild` com todas as suas tags filhas e recriadas ao fim a partir de `document.createElement`, inserindo-as na div pai com id #pacman-3d - com `appendChild`.
 
 -- **`function fixObjectLimit(obj, map)`** 
 Trata o limite da posição de um objeto caso ele ultrapasse a área do mapa. Assim como no jogo oficial do PacMan, a lógica do código faz com que o objeto em questão apareça do lado oposto exatamente no mesmo eixo da posição em que saiu de uma extremidade do mapa. 
