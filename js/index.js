@@ -73,13 +73,51 @@ var BOTTOM = new THREE.Vector3(0, -1, 0);
 var _lookAt = new THREE.Vector3();
 var keys;
 var delta = 0.02;
+var toRemove = [];
+var whoAte = [];
 var cameraFP = true;
 var cancelChangeCamera = false;
 var lifesCounter = 3;
+var won = false;
+var lost = false;
+var lostTime, wonTime;
 var gameScore = 0;
 var numGhosts = 0;
-var ghostSpawnTime = -8;
+var ghostCreationTime = -8;
 var numDotsEaten = 0;
+var LEVELTEST = [
+  '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
+  '#                         # #                         #',
+  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
+  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
+  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
+  '#                                                     #',
+  '#   # # # #   # #   # # # # # # # #   # #   # # # #   #',
+  '#   # # # #   # #   # # # # # # # #   # #   # # # #   #',
+  '#             # #         # #         # #             #',
+  '# # # # # #   # # # # #   # #   # # # # #   # # # # # #',
+  '          #   # # # # #   # #   # # # # #   #          ',
+  '          #   # #         G           # #   #          ',
+  '          #   # #   # # # # # # # #   # #   #          ',
+  '# # # # # #   # #   #             #   # #   # # # # # #',
+  '          . P       #             #                    ',
+  '# # # # # #   # #   #             #   # #   # # # # # #',
+  '          #   # #   # # # # # # # #   # #   #          ',
+  '          #   # #                     # #   #          ',
+  '          #   # #   # # # # # # # #   # #   #          ',
+  '# # # # # #   # #   # # # # # # # #   # #   # # # # # #',
+  '#                         # #                         #',
+  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
+  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
+  '#       # #                                 # #       #',
+  '# # #   # #   # #   # # # # # # # #   # #   # #   # # #',
+  '# # #   # #   # #   # # # # # # # #   # #   # #   # # #',
+  '#             # #         # #         # #             #',
+  '#   # # # # # # # # # #   # #   # # # # # # # # # #   #',
+  '#   # # # # # # # # # #   # #   # # # # # # # # # #   #',
+  '#                                                     #',
+  '# # # # # # # # # # # # # # # # # # # # # # # # # # # #'
+];
 var LEVEL = [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
   '# . . . . . . . . . . . . # # . . . . . . . . . . . . #',
@@ -95,7 +133,7 @@ var LEVEL = [
   '          # . # #         G           # # . #          ',
   '          # . # #   # # # # # # # #   # # . #          ',
   '# # # # # # . # #   #             #   # # . # # # # # #',
-  '            P       #             #       .            ',
+  '          o P       #             #       .            ',
   '# # # # # # . # #   #             #   # # . # # # # # #',
   '          # . # #   # # # # # # # #   # # . #          ',
   '          # . # #                     # # . #          ',
@@ -238,16 +276,46 @@ function initGame() {
   if(webGLExists === true) {
     createGameScene();
     // drawAxes(15);
-    createGamePerspectiveCamera();
+    // createGamePerspectiveCamera();
+    createFirstPersonCamera();
     keys = createKeyState(); 
     map = createMap(LEVEL);
     pacman = createPacman(map.pacmanSkeleton);
+    // createHudCamera();
     createLifesCounter();
     createGameScore();
     animateScene();
   } else if(webGLExists === false) {
     alert("Your browser doesn't support WebGL.");
   }
+}
+
+function reloadGame() {
+  while(scene.children.length > 0)
+    scene.remove(scene.children[0]);
+  
+  ghosts.map(ghost => toRemove.push(ghost));
+  removeObjAtMap();
+
+  removeInfosGameScore();
+  removeInfosLifesCounter();
+  
+  won = false;
+  lost = false;
+  wonTime = 0;
+  lostTime = 0;
+  lifesCounter = 3;
+  gameScore = 0;
+  numGhosts = 0;
+  ghostCreationTime = -8;
+  numDotsEaten = 0;
+  
+  createGameScene();
+  map = createMap(LEVEL);
+  pacman = createPacman(map.pacmanSkeleton);
+  createGameScore();
+  // createLifesCounter();
+  animateScene();
 }
 
 function createGameScene() {
@@ -260,11 +328,32 @@ function createGameScene() {
 
 function createGamePerspectiveCamera() {
   cameraFP = false;
-  camera = new THREE.PerspectiveCamera(60, canvasWidth / canvasHeight, 0.1, 100);
-  camera.position.set(0, -40, 50);
-  camera.lookAt(scene.position);
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableRotate = false;
+  camera = new THREE.PerspectiveCamera(75, canvasWidth / canvasHeight, 0.1, 100);
+  
+  camera.targetPosition = new THREE.Vector3();
+  camera.targetLookAt = new THREE.Vector3();
+  camera.lookAtPosition = new THREE.Vector3();
+
+  // camera.position.set(0, -40, 50);
+  // camera.lookAt(scene.position);
+  // controls = new THREE.OrbitControls(camera, renderer.domElement);
+  // controls.enableRotate = false;
+}
+
+function updateGamePerspectiveCamera() {
+  //?? PARA TESTESS
+  camera.targetPosition.set(map.centerX, map.centerY, 30);
+  camera.targetLookAt.set(map.centerX, map.centerY, 0);
+
+  //! olhando de cima sempre na direção do pacman
+  // camera.targetPosition = pacman.position.clone().addScaledVector(UP, 6);
+  // camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 0.01);
+  // camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 90*Math.PI/180);
+
+  var cameraSpeed = 10;
+  camera.position.lerp(camera.targetPosition, delta * cameraSpeed);
+  camera.lookAtPosition.lerp(camera.targetLookAt, delta * cameraSpeed);
+  camera.lookAt(camera.lookAtPosition);
 }
 
 function createFirstPersonCamera() {
@@ -277,10 +366,20 @@ function createFirstPersonCamera() {
 }
 
 function updateFirstPersonCamera() {
-  camera.targetPosition.copy(pacman.position).addScaledVector(UP, 1.5).addScaledVector(pacman.direction, -1);
-  camera.targetLookAt.copy(pacman.position).add(pacman.direction);
-  camera.position.lerp(camera.targetPosition, 0.2);
-  camera.lookAtPosition.lerp(camera.targetLookAt, 0.2);
+  if (won) {
+    camera.targetPosition.set(map.centerX, map.centerY, 30);
+    camera.targetLookAt.set(map.centerX, map.centerY, 0);
+  } else if (lost) {
+    camera.targetPosition = pacman.position.clone().addScaledVector(UP, 4);
+    camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 0.01);
+  } else {
+    camera.targetPosition.copy(pacman.position).addScaledVector(UP, 1.5).addScaledVector(pacman.direction, -1);
+    camera.targetLookAt.copy(pacman.position).add(pacman.direction);
+  }
+
+  var cameraSpeed = (lost || won) ? 1 : 10;
+  camera.position.lerp(camera.targetPosition, delta * cameraSpeed);
+  camera.lookAtPosition.lerp(camera.targetLookAt, delta * cameraSpeed);
   camera.lookAt(camera.lookAtPosition);
 }
 
@@ -305,10 +404,17 @@ function createGameScore() {
   gameScoreContainer.appendChild(gameScoreValue);
 }
 
+function removeInfosGameScore() {
+  var divGameScore = document.getElementById('game-score');
+  divGameScore.parentNode.removeChild(divGameScore);
+  var newGameScore = document.createElement('div');
+  newGameScore.setAttribute('id', 'game-score');
+  document.getElementById('pacman-3d').appendChild(newGameScore);
+}
+
 function updateGameScore(value) {
   gameScore += value;
-  if (gameScore > 0) 
-    document.getElementById('game-score').getElementsByClassName('score')[0].innerHTML = gameScore;
+  document.getElementById('game-score').getElementsByClassName('score')[0].innerHTML = gameScore;
 }
 
 function createLifesCounter() {
@@ -319,6 +425,14 @@ function createLifesCounter() {
     life.className = 'life';
     lifesCounterContainer.appendChild(life);
   }
+}
+
+function removeInfosLifesCounter() {
+  var divLifesCounter = document.getElementById('lifes-counter');
+  divLifesCounter.parentNode.removeChild(divLifesCounter);
+  var newLifesCounter = document.createElement('div');
+  newLifesCounter.setAttribute('id', 'lifes-counter');
+  document.getElementById('pacman-3d').appendChild(newLifesCounter);
 }
 
 function updateLifesCounter() {
@@ -340,7 +454,6 @@ function createMap(levelDef) {
 
   var x, y;
   for (var row = 0; row < levelDef.length; row++) {
-    // y = -row + (levelDef.length - 3) / 2;
     y = -row;
     map[y] = {};
 
@@ -348,7 +461,6 @@ function createMap(levelDef) {
     map.right = Math.max(map.right, length);
 
     for (var column = 0; column < levelDef[row].length; column += 2) {
-      // x = Math.floor(column / 2) + (2 - levelDef.length/2);
       x = Math.floor(column / 2);
       var cell = levelDef[row][column];
       var object = null;
@@ -398,12 +510,22 @@ function getObjAtMap(map, pos) {
   return map[y] && map[y][x];
 }
 
-function removeObjAtMap(map, pos) {
+function makeInvisibleObjAtMap(map, pos) {
   var x = Math.round(pos.x);
   var y = Math.round(pos.y);
 
   if (map[y] && map[y][x]) 
     map[y][x].visible = false;
+}
+
+function removeObjAtMap() {
+  toRemove.forEach(scene.remove, scene);
+  toRemove.map(item => {
+    if (toRemove.hasOwnProperty(item)) {
+      scene.remove(toRemove[item]);
+      delete toRemove[item];
+    }
+  });
 }
 
 function createWallMaze() {
@@ -434,7 +556,8 @@ function createPacman(skeleton) {
   pacman.frames = pacmanGeometries;
   pacman.position.copy(skeleton);
   pacman.direction = new THREE.Vector3(-1, 0, 0);
-  pacman.isWrapper = true;
+  pacman.distanceMoved = 0;
+  pacman.hasLimit = true;
   pacman.ateBigDot = false;
 
   scene.add(pacman);
@@ -442,7 +565,7 @@ function createPacman(skeleton) {
 }
 
 function createGhost(skeleton, color) {
-  const { x, y, z } = skeleton;
+  const { z } = skeleton;
   var heightCylinder = GHOST_RADIUS;
   var material = new THREE.MeshPhongMaterial({ color, side: THREE.DoubleSide });
 
@@ -458,8 +581,8 @@ function createGhost(skeleton, color) {
   ghost.add(objSemisphere, objCylinder);
   ghost.position.copy(skeleton);
   ghost.direction = new THREE.Vector3(-1, 0, 0);
-  ghost.isWrapper = true;
-  ghost.isGhost = true;
+  ghost.hasLimit = true;
+  ghost.isAfraid = false;
 
   scene.add(ghost);
   return ghost;
@@ -470,7 +593,7 @@ function createDot() {
   var texture = new THREE.TextureLoader().load("textures/coin_texture.jpg");
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set( 4, 4 );
+  texture.repeat.set(4, 4);
   var coinMaterial = new THREE.MeshLambertMaterial({ map: texture });
   var dot = new THREE.Mesh(coinGeometry, coinMaterial);
   dot.isDot = true;
@@ -480,7 +603,7 @@ function createDot() {
 
 function createBigDot() {
   let geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-  let material =  new THREE.ShaderMaterial({
+  let material = new THREE.ShaderMaterial({
     vertexShader: vertexShaderBigDot,
     fragmentShader: fragmentShaderBigDot,
     uniforms: uniformsBigDot,
@@ -513,7 +636,7 @@ function animateFloatGhost(ghost) {
   const deltaY = 0.2;
 
   if (frames % framesInterval === 0) {
-    posYGhost = Math.round((posYGhost + signalGhost*0.05) * 100) / 100;
+    posYGhost = Math.round((posYGhost + signalGhost * 0.05) * 100) / 100;
     scene.remove(ghost);
     ghost.position.z = posYGhost;
     scene.add(ghost);
@@ -545,7 +668,7 @@ function movePacman() {
     pacman.distanceMoved += PACMAN_SPEED * delta;
   }
 
-  // [TODO] - explicar essa parte no README.md
+  // ??? [TODO] - explicar essa parte no README.md
   var leftSide = pacman.position.clone().addScaledVector(LEFT, PACMAN_RADIUS).round();
   var topSide = pacman.position.clone().addScaledVector(TOP, PACMAN_RADIUS).round();
   var rightSide = pacman.position.clone().addScaledVector(RIGHT, PACMAN_RADIUS).round();
@@ -562,15 +685,70 @@ function movePacman() {
 
   var obj = getObjAtMap(map, pacman.position);
   if (obj && obj.isDot === true && obj.visible === true) {
-    removeObjAtMap(map, pacman.position);
+    makeInvisibleObjAtMap(map, pacman.position);
     numDotsEaten += 1;
     updateGameScore(5);
   }
   pacman.ateBigDot = false;
   if (obj && obj.isBigDot === true && obj.visible === true) {
-    removeObjAtMap(map, pacman.position);
-    updateLifesCounter(); //--------- SÓ PARA TESTE
+    makeInvisibleObjAtMap(map, pacman.position);
     pacman.ateBigDot = true;
+  }
+}
+
+function updatePacman(now) {
+  if (!won && !lost)
+    movePacman();
+
+  if (!won && numDotsEaten === map.numDots) {
+    won = true;
+    wonTime = now;
+    console.log('[GAME] YOU WON!');
+  }
+  
+  // !!! [TODO] RESETAR CENA SE won = true E MOSTRAR AVISO DE YOU WON
+  if (won && now - wonTime > 3) {
+    reloadGame();
+  }
+
+  // if (lost && lifesCounter > 0) {
+  //   // pacman.visible = false;
+  //   // toRemove.push(pacman);
+  //   if (now - lostTime > 2) { 
+  //     // ??? pacman é reconstruído depois de x segundos que morreu 
+  //     // ??? não foi usado createPacman pq updatePacman é chamado dentro do loop - animateScene 
+  //     // pacman = createPacman(map.pacmanSkeleton);
+  //     pacman.visible = true;
+  //     pacman.position.copy(map.pacmanSkeleton);
+  //     pacman.direction.copy(LEFT);
+  //     pacman.distanceMoved = 0;
+  //     lost = false;
+  //   }
+  // }
+
+  if (lost && lifesCounter > 0 && now - lostTime > 3) {
+    lost = false;
+    pacman.position.copy(map.pacmanSkeleton);
+    pacman.direction.copy(LEFT);
+    pacman.distanceMoved = 0;
+  }
+
+  // !!! CORRIGIR AQUI
+  if (lost) {
+    // If pacman got eaten, show dying animation.
+    var angle = (now - lostTime) * Math.PI / 2;
+    var frame = Math.min(pacman.frames.length - 1, Math.floor(angle / Math.PI * pacman.frames.length));
+
+    pacman.geometry = pacman.frames[frame];
+  } else {
+    // Otherwise, show eating animation based on how much pacman has moved.
+    var maxAngle = Math.PI / 4;
+    var angle = (pacman.distanceMoved * 2) % (maxAngle * 2);
+    if (angle > maxAngle)
+        angle = maxAngle * 2 - angle;
+    var frame = Math.floor(angle / Math.PI * pacman.frames.length);
+
+    pacman.geometry = pacman.frames[frame];
   }
 }
 
@@ -599,10 +777,10 @@ function createKeyState() {
 }
 
 function showGhostAtMap(now) {
-  if (numGhosts < 4 && now - ghostSpawnTime > 8) {
+  if (numGhosts >= 0 && numGhosts < 4 && now - ghostCreationTime > 8) {
     ghosts.push(createGhost(map.ghostSkeleton, colorsGhost[numGhosts]));
     numGhosts += 1;
-    ghostSpawnTime = now;
+    ghostCreationTime = now;
   } 
 }
 
@@ -616,7 +794,7 @@ function moveGhost(ghost) {
   ghost.translateOnAxis(ghost.direction, delta * GHOST_SPEED);
   currentPosition.copy(ghost.position).addScaledVector(ghost.direction, 0.5).round();
 
-  // verifica se a posição anterior não é igual a atual - se não está "encurralado"?
+  // ??? verifica se a posição anterior não é igual a atual - se não está "encurralado"?
   if (!currentPosition.equals(previousPosition)) {
     leftTurn.copy(ghost.direction).applyAxisAngle(UP, Math.PI / 2);
     rightTurn.copy(ghost.direction).applyAxisAngle(UP, -Math.PI / 2);
@@ -625,29 +803,79 @@ function moveGhost(ghost) {
     var leftWall = isWall(map, currentPosition.copy(ghost.position).add(leftTurn));
     var rightWall = isWall(map, currentPosition.copy(ghost.position).add(rightTurn));
 
-    // não existe parede lateral, então pode virar 90 graus tanto para a esquerda quanto para a direita
+    // ??? não existe parede lateral, então pode virar 90 graus tanto para a esquerda quanto para a direita
     if (!leftWall || !rightWall) {
-      // se o fantasma puder girar, escolha aleatoriamente um das direções possíveis
+      // ??? se o fantasma puder girar, escolha aleatoriamente um das direções possíveis
       var possibleTurns = [];
       if (!forwardWall) possibleTurns.push(ghost.direction);
       if (!leftWall) possibleTurns.push(leftTurn);
       if (!rightWall) possibleTurns.push(rightTurn);
 
-      // if (possibleTurns.length === 0)
-      //     throw new Error('A ghost got stuck!');
-
       var newDirection = possibleTurns[Math.floor(Math.random() * possibleTurns.length)];
       ghost.direction.copy(newDirection);
 
-      // posicionar o fantasma numa posição inteira e seguir com a movimentação em uma nova direção
+      // ??? posicionar o fantasma numa posição inteira e seguir com a movimentação em uma nova direção
       ghost.position.round().addScaledVector(ghost.direction, delta);
     }
   }
 }
 
-function updateGhost(ghost, now) {
+function updateGhost(ghost, idxGhost, now, frames) {
   moveGhost(ghost);
   animateFloatGhost(ghost);
+
+  // ??? remove todos os ghosts do vetor para que possa ser contabilizado novamente em livesCounter caso um ghost que já comeu o pacman coma-o de novo
+  if (frames % 50 === 0) {
+    whoAte = [];
+  }
+
+  // ??? se o pacman comer um bigDot - os fantasmas ficam com medo
+  if (pacman.ateBigDot === true) {
+    ghost.isAfraid = true;
+    ghost.becameAfraidTime = now;
+    ghost.children[0].material.color = new THREE.Color(0xFFFFFF);
+    ghost.children[1].material.color = new THREE.Color(0xFFFFFF);
+  }
+
+  // ??? fantasmas não tem mais medo depois de 10 segundos
+  if (ghost.isAfraid && now - ghost.becameAfraidTime > 10) {
+    ghost.isAfraid = false;
+    ghost.children[0].material.color = new THREE.Color(colorsGhost[idxGhost]);
+    ghost.children[1].material.color = new THREE.Color(colorsGhost[idxGhost]);
+  }
+
+  // ??? checar a colisão entre pacman e fantasma
+  var difference = new THREE.Vector3();
+  difference.copy(pacman.position).sub(ghost.position);
+
+  if (!lost && !won && difference.length() < PACMAN_RADIUS + GHOST_RADIUS) {
+    if (ghost.isAfraid === true) {
+      var toRemoveFiltered = toRemove.filter(item => item === ghost);
+      if (toRemoveFiltered.length === 0) {
+        // numGhosts -= 1;
+        toRemove.push(ghost);
+      }
+    } else {
+      var whoAteFiltered = whoAte.filter(item => item === ghost);
+      if (whoAteFiltered.length === 0) {
+        updateLifesCounter();
+        whoAte.push(ghost);
+      }
+      
+      lost = true;
+      lostTime = now;
+
+      if (lifesCounter > 0) {
+        // !!! [TODO] MOSTRAR AVISO DE YOU DIED
+        console.log('[GAME] YOU DIED!');
+      }
+      else {
+        // !!! [TODO] MOSTRAR AVISO DE GAME OVER E RESETAR CENA
+        console.log('[GAME] GAME OVER!');
+        reloadGame();
+      }
+    }
+  }
 }
 
 // /\/\/\/\/\/\/\/\  general animate scene  /\/\/\/\/\/\/\/\
@@ -673,20 +901,21 @@ function animateScene() {
     }
   } else {
     var now = window.performance.now() / 1000;
-    
-    if (cameraFP)
-      updateFirstPersonCamera();
+    if (cameraFP) updateFirstPersonCamera();
+    else updateGamePerspectiveCamera();
     changeCameraView();
     animateMouthPacman();
     showGhostAtMap(now);
-    movePacman();
+    updatePacman(now);
 
     scene.children.forEach(obj => {
-      if (obj.isWrapper === true)
+      if (obj.hasLimit === true)
         fixObjectLimit(obj, map);
-      if (obj.isGhost === true) 
-        updateGhost(obj, now);
     });
+    
+    ghosts.map((ghost, idx) => updateGhost(ghost, idx, now, frames));
+
+    removeObjAtMap();
   }
 
   renderer.render(scene, camera);
