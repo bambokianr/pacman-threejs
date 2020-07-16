@@ -292,9 +292,14 @@ function initGame() {
 }
 
 function reloadGame() {
-  //!! ver se os fantasmas estão sendo removidos
-  while(scene.children.length > 0)  
-    scene.remove(scene.children[0]); 
+  while(scene.children.length > 0)
+    scene.remove(scene.children[0]);
+  
+  ghosts.map(ghost => toRemove.push(ghost));
+  removeObjAtMap();
+
+  removeInfosGameScore();
+  removeInfosLifesCounter();
   
   won = false;
   lost = false;
@@ -303,11 +308,14 @@ function reloadGame() {
   lifesCounter = 3;
   gameScore = 0;
   numGhosts = 0;
+  ghostCreationTime = -8;
   numDotsEaten = 0;
-
+  
   createGameScene();
   map = createMap(LEVEL);
   pacman = createPacman(map.pacmanSkeleton);
+  createGameScore();
+  // createLifesCounter();
   animateScene();
 }
 
@@ -334,9 +342,13 @@ function createGamePerspectiveCamera() {
 }
 
 function updateGamePerspectiveCamera() {
+  //?? PARA TESTESS
+  camera.targetPosition.set(map.centerX, map.centerY, 30);
+  camera.targetLookAt.set(map.centerX, map.centerY, 0);
+
   //! olhando de cima sempre na direção do pacman
-  camera.targetPosition = pacman.position.clone().addScaledVector(UP, 6);
-  camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 0.01);
+  // camera.targetPosition = pacman.position.clone().addScaledVector(UP, 6);
+  // camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 0.01);
   // camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 90*Math.PI/180);
 
   var cameraSpeed = 10;
@@ -410,6 +422,14 @@ function createGameScore() {
   gameScoreContainer.appendChild(gameScoreValue);
 }
 
+function removeInfosGameScore() {
+  var divGameScore = document.getElementById('game-score');
+  divGameScore.parentNode.removeChild(divGameScore);
+  var newGameScore = document.createElement('div');
+  newGameScore.setAttribute('id', 'game-score');
+  document.getElementById('pacman-3d').appendChild(newGameScore);
+}
+
 function updateGameScore(value) {
   gameScore += value;
   document.getElementById('game-score').getElementsByClassName('score')[0].innerHTML = gameScore;
@@ -423,6 +443,14 @@ function createLifesCounter() {
     life.className = 'life';
     lifesCounterContainer.appendChild(life);
   }
+}
+
+function removeInfosLifesCounter() {
+  var divLifesCounter = document.getElementById('lifes-counter');
+  divLifesCounter.parentNode.removeChild(divLifesCounter);
+  var newLifesCounter = document.createElement('div');
+  newLifesCounter.setAttribute('id', 'lifes-counter');
+  document.getElementById('pacman-3d').appendChild(newLifesCounter);
 }
 
 function updateLifesCounter() {

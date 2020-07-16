@@ -185,6 +185,10 @@ Função chamada sempre que uma vida é perdida. Atualiza o número de vidas res
 document.getElementsByClassName('life')[lifesCounter].style.display = 'none';
 ```
 
+-- **`function removeInfosGameScore()`** ??? 
+
+-- **`function removeInfosLifesCounter()`** ??? 
+
 -- **`function fixObjectLimit(obj, map)`** 
 Trata o limite da posição de um objeto caso ele ultrapasse a área do mapa. Assim como no jogo oficial do PacMan, a lógica do código faz com que o objeto em questão apareça do lado oposto exatamente no mesmo eixo da posição em que saiu de uma extremidade do mapa. 
 Na função `animateScene` (re-renderização em cena dos métodos indicados a cada frame), `fixObjectLimit` é chamado para verificar se na cena algum objeto com propriedade `hasLimit` está fora dos limites definidos pelo mapa - a partir do código abaixo.
