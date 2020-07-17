@@ -314,7 +314,7 @@ function reloadGame() {
   map = createMap(LEVEL);
   pacman = createPacman(map.pacmanSkeleton);
   createGameScore();
-  // createLifesCounter();
+  createLifesCounter();
   animateScene();
 }
 
