@@ -668,12 +668,20 @@ function movePacman() {
     pacman.distanceMoved += PACMAN_SPEED * delta;
   }
 
-  // ??? [TODO] - explicar essa parte no README.md
+  //?? gera posições a esquerda, a direita, a frente e atrás do pacman - pacman.position representa seu centro. 
+  //?? é adicionado um vetor escalar que da as posições periféricas (baseando-se no raio)
+  // valores dão basicamente sempre o mesmo resultado
   var leftSide = pacman.position.clone().addScaledVector(LEFT, PACMAN_RADIUS).round();
-  var topSide = pacman.position.clone().addScaledVector(TOP, PACMAN_RADIUS).round();
   var rightSide = pacman.position.clone().addScaledVector(RIGHT, PACMAN_RADIUS).round();
+  var topSide = pacman.position.clone().addScaledVector(TOP, PACMAN_RADIUS).round();
   var bottomSide = pacman.position.clone().addScaledVector(BOTTOM, PACMAN_RADIUS).round();
+  // console.log('pacman.position', pacman.position);
+  // console.log('leftSide', leftSide);
+  // console.log('rightSide', rightSide);
+  // console.log('topSide', topSide);
+  // console.log('bottomSide', bottomSide);
 
+  //?? verifica se a posição correspondente se choca com uma parede - se sim, mantem o pacman em uma posiçao q não a ultrapasse
   if (isWall(map, leftSide)) 
     pacman.position.x = leftSide.x + 0.5 + PACMAN_RADIUS;
   if (isWall(map, rightSide)) 
@@ -683,16 +691,20 @@ function movePacman() {
   if (isWall(map, bottomSide)) 
     pacman.position.y = bottomSide.y + 0.5 + PACMAN_RADIUS;
 
+  //?? a partir da posicao do pacman, verifica se existe algum objeto nessa posicao e se ele é dot ou bigDot 
+  //?? significa que o pacman está passando por esse objeto, ou seja, irá comê-lo
   var obj = getObjAtMap(map, pacman.position);
   if (obj && obj.isDot === true && obj.visible === true) {
     makeInvisibleObjAtMap(map, pacman.position);
     numDotsEaten += 1;
     updateGameScore(5);
   }
+  //?? ateBigDot significa tornar os fantasmas com medo por alguns segundos - podem ser comidos pelo pacman nesse intervalo
   pacman.ateBigDot = false;
   if (obj && obj.isBigDot === true && obj.visible === true) {
     makeInvisibleObjAtMap(map, pacman.position);
     pacman.ateBigDot = true;
+    updateGameScore(10);
   }
 }
 
@@ -706,25 +718,8 @@ function updatePacman(now) {
     console.log('[GAME] YOU WON!');
   }
   
-  // !!! [TODO] RESETAR CENA SE won = true E MOSTRAR AVISO DE YOU WON
-  if (won && now - wonTime > 3) {
+  if (won && now - wonTime > 3) 
     reloadGame();
-  }
-
-  // if (lost && lifesCounter > 0) {
-  //   // pacman.visible = false;
-  //   // toRemove.push(pacman);
-  //   if (now - lostTime > 2) { 
-  //     // ??? pacman é reconstruído depois de x segundos que morreu 
-  //     // ??? não foi usado createPacman pq updatePacman é chamado dentro do loop - animateScene 
-  //     // pacman = createPacman(map.pacmanSkeleton);
-  //     pacman.visible = true;
-  //     pacman.position.copy(map.pacmanSkeleton);
-  //     pacman.direction.copy(LEFT);
-  //     pacman.distanceMoved = 0;
-  //     lost = false;
-  //   }
-  // }
 
   if (lost && lifesCounter > 0 && now - lostTime > 3) {
     lost = false;
@@ -733,23 +728,13 @@ function updatePacman(now) {
     pacman.distanceMoved = 0;
   }
 
-  // !!! CORRIGIR AQUI
+  //?? se o pacman for comido, mostra animação dele morrendo
   if (lost) {
-    // If pacman got eaten, show dying animation.
     var angle = (now - lostTime) * Math.PI / 2;
     var frame = Math.min(pacman.frames.length - 1, Math.floor(angle / Math.PI * pacman.frames.length));
 
     pacman.geometry = pacman.frames[frame];
-  } else {
-    // Otherwise, show eating animation based on how much pacman has moved.
-    var maxAngle = Math.PI / 4;
-    var angle = (pacman.distanceMoved * 2) % (maxAngle * 2);
-    if (angle > maxAngle)
-        angle = maxAngle * 2 - angle;
-    var frame = Math.floor(angle / Math.PI * pacman.frames.length);
-
-    pacman.geometry = pacman.frames[frame];
-  }
+  } 
 }
 
 function createKeyState() {
