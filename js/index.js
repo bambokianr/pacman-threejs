@@ -852,7 +852,7 @@ function updateGhost(ghost, idxGhost, now, frames) {
     if (ghost.isAfraid === true) {
       var toRemoveFiltered = toRemove.filter(item => item === ghost);
       if (toRemoveFiltered.length === 0) {
-        // numGhosts -= 1;
+        numGhosts -= 1;
         toRemove.push(ghost);
       }
     } else {
@@ -865,7 +865,7 @@ function updateGhost(ghost, idxGhost, now, frames) {
       lost = true;
       lostTime = now;
 
-      if (lifesCounter > 0) {
+      if (lost && lifesCounter > 0) {
         // !!! [TODO] MOSTRAR AVISO DE YOU DIED
         console.log('[GAME] YOU DIED!');
       }
