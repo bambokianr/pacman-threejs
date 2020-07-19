@@ -85,6 +85,7 @@ var gameScore = 0;
 var numGhosts = 0;
 var ghostCreationTime = -8;
 var numDotsEaten = 0;
+var sound; // handles the sound
 var LEVELTEST = [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
   '#                         # #                         #',
@@ -194,6 +195,11 @@ function createInitialPerspectiveCamera() {
   camera = new THREE.PerspectiveCamera(35, canvasWidth / canvasHeight, 0.1, 1000);
   camera.position.set(-100, 50, 270);
   camera.lookAt(scene.position);
+
+  // adding listener to the camera
+  //var listener = new THREE.AudioListener();
+  //camera.add(listener);
+  //sound = new THREE.Audio(listener);
 }
 
 function createGLTFLoader() {
@@ -268,6 +274,13 @@ function passToNextScene(e) {
       scene.remove(scene.children[0]); 
     initGame();
     document.body.removeEventListener('keypress', passToNextScene);
+
+    var audioLoader = new THREE.AudioLoader();
+    audioLoader.load('sounds/pacman_beginning.wav', function(buffer) {
+      sound.setBuffer(buffer);
+      sound.setVolume(0.5);
+      sound.play();
+    });
   }
 }
 
@@ -363,6 +376,11 @@ function createFirstPersonCamera() {
   camera.targetPosition = new THREE.Vector3();
   camera.targetLookAt = new THREE.Vector3();
   camera.lookAtPosition = new THREE.Vector3();
+
+  // adding listener to the camera
+  var listener = new THREE.AudioListener();
+  camera.add(listener);
+  sound = new THREE.Audio(listener);
 }
 
 function updateFirstPersonCamera() {
@@ -698,6 +716,13 @@ function movePacman() {
     makeInvisibleObjAtMap(map, pacman.position);
     numDotsEaten += 1;
     updateGameScore(5);
+
+    var audioLoader = new THREE.AudioLoader();
+    audioLoader.load('sounds/pacman_eatfruit.wav', function(buffer) {
+      sound.setBuffer(buffer);
+      sound.setVolume(0.5);
+      sound.play();
+    });
   }
   //?? ateBigDot significa tornar os fantasmas com medo por alguns segundos - podem ser comidos pelo pacman nesse intervalo
   pacman.ateBigDot = false;
@@ -705,6 +730,13 @@ function movePacman() {
     makeInvisibleObjAtMap(map, pacman.position);
     pacman.ateBigDot = true;
     updateGameScore(10);
+
+    var audioLoader = new THREE.AudioLoader();
+    audioLoader.load('sounds/pacman_intermission.wav', function(buffer) {
+      sound.setBuffer(buffer);
+      sound.setVolume(0.5);
+      sound.play();
+    });
   }
 }
 
@@ -726,10 +758,12 @@ function updatePacman(now) {
     pacman.position.copy(map.pacmanSkeleton);
     pacman.direction.copy(LEFT);
     pacman.distanceMoved = 0;
+
+    
   }
 
   //?? se o pacman for comido, mostra animação dele morrendo
-  if (lost) {
+  if (lost) {sa    
     var angle = (now - lostTime) * Math.PI / 2;
     var frame = Math.min(pacman.frames.length - 1, Math.floor(angle / Math.PI * pacman.frames.length));
 
