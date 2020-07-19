@@ -86,6 +86,8 @@ var numGhosts = 0;
 var ghostCreationTime = -8;
 var numDotsEaten = 0;
 var sound; // handles the sound
+var muted = false;
+var cancelMuted = false;
 var LEVELTEST = [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
   '#                         # #                         #',
@@ -276,11 +278,12 @@ function passToNextScene(e) {
     document.body.removeEventListener('keypress', passToNextScene);
 
     var audioLoader = new THREE.AudioLoader();
-    audioLoader.load('sounds/pacman_beginning.wav', function(buffer) {
-      sound.setBuffer(buffer);
-      sound.setVolume(0.5);
-      sound.play();
-    });
+    if (!muted)
+      audioLoader.load('sounds/pacman_beginning.wav', function(buffer) {
+        sound.setBuffer(buffer);
+        sound.setVolume(0.5);
+        sound.play();
+      });
   }
 }
 
@@ -427,6 +430,16 @@ function changeCameraView() {
       cancelChangeCamera = true;
     }
   } else cancelChangeCamera = false;
+}
+
+function muteSound() {
+  if (keys['M']) {
+    if (!cancelMuted) {
+      if (muted) muted = false;
+      else muted = true;
+      cancelMuted = true;
+    }
+  } else cancelMuted = false;
 }
 
 function createGameScore() {
@@ -736,12 +749,13 @@ function movePacman() {
     updateGameScore(5);
 
     var audioLoader = new THREE.AudioLoader();
-    audioLoader.load('sounds/pacman_eatfruit.wav', function(buffer) {
-      sound.setBuffer(buffer);
-      sound.setVolume(0.5);
-      //sound.stop();
-      sound.play();
-    });
+    if (!muted)
+      audioLoader.load('sounds/pacman_eatfruit.wav', function(buffer) {
+        sound.setBuffer(buffer);
+        sound.setVolume(0.5);
+        //sound.stop();
+        sound.play();
+      });
   }
   //?? ateBigDot significa tornar os fantasmas com medo por alguns segundos - podem ser comidos pelo pacman nesse intervalo
   pacman.ateBigDot = false;
@@ -751,12 +765,13 @@ function movePacman() {
     updateGameScore(10);
 
     var audioLoader = new THREE.AudioLoader();
-    audioLoader.load('sounds/pacman_intermission.wav', function(buffer) {
-      sound.setBuffer(buffer);
-      sound.setVolume(0.5);
-      sound.stop();
-      sound.play();
-    });
+    if (!muted)
+      audioLoader.load('sounds/pacman_intermission.wav', function(buffer) {
+        sound.setBuffer(buffer);
+        sound.setVolume(0.5);
+        sound.stop();
+        sound.play();
+      });
   }
 }
 
@@ -899,12 +914,13 @@ function updateGhost(ghost, idxGhost, now, frames) {
         whoAte.push(ghost);
 
         var audioLoader = new THREE.AudioLoader();
-    audioLoader.load('sounds/pacman_death.wav', function(buffer) {
-      sound.setBuffer(buffer);
-      sound.setVolume(0.5);
-      sound.stop();
-      sound.play();
-    });
+        if (!muted)
+          audioLoader.load('sounds/pacman_death.wav', function(buffer) {
+            sound.setBuffer(buffer);
+            sound.setVolume(0.5);
+            sound.stop();
+            sound.play();
+    }     );
       }
       
       lost = true;
@@ -949,6 +965,7 @@ function animateScene() {
     if (cameraFP) updateFirstPersonCamera();
     else updateGamePerspectiveCamera();
     changeCameraView();
+    muteSound();
     animateMouthPacman();
     showGhostAtMap(now);
     updatePacman(now);
