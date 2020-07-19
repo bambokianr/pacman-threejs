@@ -358,15 +358,33 @@ function updateGamePerspectiveCamera() {
   camera.targetPosition.set(map.centerX, map.centerY, 30);
   camera.targetLookAt.set(map.centerX, map.centerY, 0);
 
+  //camera.targetPosition.copy(pacman.position).addScaledVector(UP, 1.5).addScaledVector(pacman.direction, -1);
+  //camera.targetLookAt.copy(pacman.position).add(pacman.direction);
+
   //! olhando de cima sempre na direção do pacman
-  // camera.targetPosition = pacman.position.clone().addScaledVector(UP, 6);
-  // camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 0.01);
-  // camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 90*Math.PI/180);
+   //camera.targetPosition = pacman.position.clone().addScaledVector(UP, 6);
+   //camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 0.01);
+   //camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 90*Math.PI/180);
+  
+   //camera.rotation.order = 'YXZ';
+   
 
   var cameraSpeed = 10;
   camera.position.lerp(camera.targetPosition, delta * cameraSpeed);
   camera.lookAtPosition.lerp(camera.targetLookAt, delta * cameraSpeed);
   camera.lookAt(camera.lookAtPosition);
+
+  var angleToRotate = (Math.atan(pacman.direction.y / pacman.direction.x)) - Math.PI/2;
+  if (pacman.direction.x >= 0 && pacman.direction.y >= 0)
+    camera.rotation.z += angleToRotate;
+  else if (pacman.direction.x <= 0 && pacman.direction.y >= 0)
+    camera.rotation.z += angleToRotate + Math.PI;
+  else if (pacman.direction.x <= 0 && pacman.direction.y <= 0)
+    camera.rotation.z += angleToRotate + Math.PI;
+  else if (pacman.direction.x >= 0 && pacman.direction.y <= 0)
+    camera.rotation.z += angleToRotate + 2*Math.PI;
+  
+
 }
 
 function createFirstPersonCamera() {
