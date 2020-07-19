@@ -721,6 +721,7 @@ function movePacman() {
     audioLoader.load('sounds/pacman_eatfruit.wav', function(buffer) {
       sound.setBuffer(buffer);
       sound.setVolume(0.5);
+      //sound.stop();
       sound.play();
     });
   }
@@ -735,6 +736,7 @@ function movePacman() {
     audioLoader.load('sounds/pacman_intermission.wav', function(buffer) {
       sound.setBuffer(buffer);
       sound.setVolume(0.5);
+      sound.stop();
       sound.play();
     });
   }
@@ -753,17 +755,15 @@ function updatePacman(now) {
   if (won && now - wonTime > 3) 
     reloadGame();
 
-  if (lost && lifesCounter > 0 && now - lostTime > 3) {
+  if (lost && lifesCounter > 0 && now - lostTime > 3) {    
     lost = false;
     pacman.position.copy(map.pacmanSkeleton);
     pacman.direction.copy(LEFT);
-    pacman.distanceMoved = 0;
-
-    
+    pacman.distanceMoved = 0;     
   }
 
   //?? se o pacman for comido, mostra animação dele morrendo
-  if (lost) {sa    
+  if (lost) {
     var angle = (now - lostTime) * Math.PI / 2;
     var frame = Math.min(pacman.frames.length - 1, Math.floor(angle / Math.PI * pacman.frames.length));
 
@@ -879,6 +879,14 @@ function updateGhost(ghost, idxGhost, now, frames) {
       if (whoAteFiltered.length === 0) {
         updateLifesCounter();
         whoAte.push(ghost);
+
+        var audioLoader = new THREE.AudioLoader();
+    audioLoader.load('sounds/pacman_death.wav', function(buffer) {
+      sound.setBuffer(buffer);
+      sound.setVolume(0.5);
+      sound.stop();
+      sound.play();
+    });
       }
       
       lost = true;
