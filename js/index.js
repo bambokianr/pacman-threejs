@@ -85,6 +85,9 @@ var gameScore = 0;
 var numGhosts = 0;
 var ghostCreationTime = -8;
 var numDotsEaten = 0;
+var sound; // handles the sound
+var muted = false;
+var cancelMuted = false;
 var LEVELTEST = [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
   '#                         # #                         #',
@@ -194,6 +197,11 @@ function createInitialPerspectiveCamera() {
   camera = new THREE.PerspectiveCamera(35, canvasWidth / canvasHeight, 0.1, 1000);
   camera.position.set(-100, 50, 270);
   camera.lookAt(scene.position);
+
+  // adding listener to the camera
+  //var listener = new THREE.AudioListener();
+  //camera.add(listener);
+  //sound = new THREE.Audio(listener);
 }
 
 function createGLTFLoader() {
@@ -268,6 +276,14 @@ function passToNextScene(e) {
       scene.remove(scene.children[0]); 
     initGame();
     document.body.removeEventListener('keypress', passToNextScene);
+
+    var audioLoader = new THREE.AudioLoader();
+    if (!muted)
+      audioLoader.load('sounds/pacman_beginning.wav', function(buffer) {
+        sound.setBuffer(buffer);
+        sound.setVolume(0.5);
+        sound.play();
+      });
   }
 }
 
@@ -345,15 +361,33 @@ function updateGamePerspectiveCamera() {
   camera.targetPosition.set(map.centerX, map.centerY, 30);
   camera.targetLookAt.set(map.centerX, map.centerY, 0);
 
+  //camera.targetPosition.copy(pacman.position).addScaledVector(UP, 1.5).addScaledVector(pacman.direction, -1);
+  //camera.targetLookAt.copy(pacman.position).add(pacman.direction);
+
   //! olhando de cima sempre na direção do pacman
-  // camera.targetPosition = pacman.position.clone().addScaledVector(UP, 6);
-  // camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 0.01);
-  // camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 90*Math.PI/180);
+   //camera.targetPosition = pacman.position.clone().addScaledVector(UP, 6);
+   //camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 0.01);
+   //camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 90*Math.PI/180);
+  
+   //camera.rotation.order = 'YXZ';
+   
 
   var cameraSpeed = 10;
   camera.position.lerp(camera.targetPosition, delta * cameraSpeed);
   camera.lookAtPosition.lerp(camera.targetLookAt, delta * cameraSpeed);
   camera.lookAt(camera.lookAtPosition);
+
+  var angleToRotate = (Math.atan(pacman.direction.y / pacman.direction.x)) - Math.PI/2;
+  if (pacman.direction.x >= 0 && pacman.direction.y >= 0)
+    camera.rotation.z += angleToRotate;
+  else if (pacman.direction.x <= 0 && pacman.direction.y >= 0)
+    camera.rotation.z += angleToRotate + Math.PI;
+  else if (pacman.direction.x <= 0 && pacman.direction.y <= 0)
+    camera.rotation.z += angleToRotate + Math.PI;
+  else if (pacman.direction.x >= 0 && pacman.direction.y <= 0)
+    camera.rotation.z += angleToRotate + 2*Math.PI;
+  
+
 }
 
 function createFirstPersonCamera() {
@@ -363,6 +397,11 @@ function createFirstPersonCamera() {
   camera.targetPosition = new THREE.Vector3();
   camera.targetLookAt = new THREE.Vector3();
   camera.lookAtPosition = new THREE.Vector3();
+
+  // adding listener to the camera
+  var listener = new THREE.AudioListener();
+  camera.add(listener);
+  sound = new THREE.Audio(listener);
 }
 
 function updateFirstPersonCamera() {
@@ -391,6 +430,16 @@ function changeCameraView() {
       cancelChangeCamera = true;
     }
   } else cancelChangeCamera = false;
+}
+
+function muteSound() {
+  if (keys['M']) {
+    if (!cancelMuted) {
+      if (muted) muted = false;
+      else muted = true;
+      cancelMuted = true;
+    }
+  } else cancelMuted = false;
 }
 
 function createGameScore() {
@@ -698,6 +747,15 @@ function movePacman() {
     makeInvisibleObjAtMap(map, pacman.position);
     numDotsEaten += 1;
     updateGameScore(5);
+
+    var audioLoader = new THREE.AudioLoader();
+    if (!muted)
+      audioLoader.load('sounds/pacman_eatfruit.wav', function(buffer) {
+        sound.setBuffer(buffer);
+        sound.setVolume(0.5);
+        //sound.stop();
+        sound.play();
+      });
   }
   //?? ateBigDot significa tornar os fantasmas com medo por alguns segundos - podem ser comidos pelo pacman nesse intervalo
   pacman.ateBigDot = false;
@@ -705,6 +763,15 @@ function movePacman() {
     makeInvisibleObjAtMap(map, pacman.position);
     pacman.ateBigDot = true;
     updateGameScore(10);
+
+    var audioLoader = new THREE.AudioLoader();
+    if (!muted)
+      audioLoader.load('sounds/pacman_intermission.wav', function(buffer) {
+        sound.setBuffer(buffer);
+        sound.setVolume(0.5);
+        sound.stop();
+        sound.play();
+      });
   }
 }
 
@@ -721,11 +788,11 @@ function updatePacman(now) {
   if (won && now - wonTime > 3) 
     reloadGame();
 
-  if (lost && lifesCounter > 0 && now - lostTime > 3) {
+  if (lost && lifesCounter > 0 && now - lostTime > 3) {    
     lost = false;
     pacman.position.copy(map.pacmanSkeleton);
     pacman.direction.copy(LEFT);
-    pacman.distanceMoved = 0;
+    pacman.distanceMoved = 0;     
   }
 
   //?? se o pacman for comido, mostra animação dele morrendo
@@ -845,6 +912,15 @@ function updateGhost(ghost, idxGhost, now, frames) {
       if (whoAteFiltered.length === 0) {
         updateLifesCounter();
         whoAte.push(ghost);
+
+        var audioLoader = new THREE.AudioLoader();
+        if (!muted)
+          audioLoader.load('sounds/pacman_death.wav', function(buffer) {
+            sound.setBuffer(buffer);
+            sound.setVolume(0.5);
+            sound.stop();
+            sound.play();
+    }     );
       }
       
       lost = true;
@@ -889,6 +965,7 @@ function animateScene() {
     if (cameraFP) updateFirstPersonCamera();
     else updateGamePerspectiveCamera();
     changeCameraView();
+    muteSound();
     animateMouthPacman();
     showGhostAtMap(now);
     updatePacman(now);
