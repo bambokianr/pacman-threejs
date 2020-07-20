@@ -303,11 +303,12 @@ function initGame() {
 }
 
 function reloadGame() {
-  while(scene.children.length > 0)
+  while(scene.children.length > 0) 
     scene.remove(scene.children[0]);
   
   ghosts.map(ghost => toRemove.push(ghost));
   removeObjAtMap();
+  ghosts = [];
 
   removeInfosGameScore();
   removeInfosLifesCounter();
