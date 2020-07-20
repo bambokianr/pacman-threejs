@@ -371,7 +371,6 @@ function updateGamePerspectiveCamera() {
    //camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 90*Math.PI/180);
   
    //camera.rotation.order = 'YXZ';
-   
 
   var cameraSpeed = 10;
   camera.position.lerp(camera.targetPosition, delta * cameraSpeed);
@@ -387,8 +386,6 @@ function updateGamePerspectiveCamera() {
     camera.rotation.z += angleToRotate + Math.PI;
   else if (pacman.direction.x >= 0 && pacman.direction.y <= 0)
     camera.rotation.z += angleToRotate + 2*Math.PI;
-  
-
 }
 
 function createFirstPersonCamera() {
@@ -436,7 +433,7 @@ function changeCameraView() {
 function createSoundIcon() {
   var soundIconContainer = document.getElementById('sound-icon');
   var icon = document.createElement('img');
-  icon.src = './sound1.svg';
+  icon.src = './images/sound1.svg';
   icon.className = 'icon-img';
   soundIconContainer.appendChild(icon);
 }
@@ -449,7 +446,7 @@ function addOnClickSoundIcon() {
 function changeSoundIcon() {
   var iconImg = document.getElementsByClassName('icon-img')[0];
   const nameIcon = iconImg.src.slice(iconImg.src.length - 10, iconImg.src.length);
-  const newIcon = nameIcon === 'sound1.svg' ? './sound2.svg' : './sound1.svg';
+  const newIcon = nameIcon === 'sound1.svg' ? './images/sound2.svg' : './images/sound1.svg';
   iconImg.src = newIcon;
   
   if (!cancelMuted) {
@@ -487,7 +484,7 @@ function createLifesCounter() {
   var lifesCounterContainer = document.getElementById('lifes-counter');
   for (var i = 0; i < lifesCounter; i++) {
     var life = document.createElement('img');
-    life.src = './pacman.png';
+    life.src = './images/pacman.png';
     life.className = 'life';
     lifesCounterContainer.appendChild(life);
   }
