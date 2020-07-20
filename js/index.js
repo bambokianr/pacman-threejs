@@ -290,7 +290,7 @@ function initGame() {
     // createGamePerspectiveCamera();
     createFirstPersonCamera();
     keys = createKeyState(); 
-    map = createMap(LEVELTEST);
+    map = createMap(LEVEL);
     pacman = createPacman(map.pacmanSkeleton);
     createSoundIcon();
     addOnClickSoundIcon();
@@ -323,7 +323,7 @@ function reloadGame() {
   numDotsEaten = 0;
   
   createGameScene();
-  map = createMap(LEVELTEST);
+  map = createMap(LEVEL);
   pacman = createPacman(map.pacmanSkeleton);
   createGameScore();
   createLifesCounter();
