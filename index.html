@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="favicon.ico" />
-    <link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed&family=Roboto:wght@700&family=Russo+One&display=swap" rel="stylesheet">
     <title>3D PacMan || Three.JS</title>
     <script src="js/dependences/three.min.js"></script>
 		<script src="js/dependences/OrbitControls.js"></script>
@@ -24,6 +24,44 @@
         width: 100%;
         margin: 0;
         padding: 0;
+      }
+      button {
+        font-family: 'Roboto', sans-serif;
+        font-size: 14px;
+        border: none;
+        color: #fff;
+        background-color: rgba(0, 0, 255, 0.4);
+        border-radius: 2px;
+        padding: 0.8em 1.2em;
+        cursor: pointer;
+      }
+      #help-button {
+        position: absolute;
+        bottom: 2em;
+        left: 2em;
+      }
+      .dialog {
+        background-color: rgba(0, 0, 30, 0.85);
+        text-align: center;
+        border-radius: 4px;
+        position: absolute;
+        left: 30%;
+        top: 25%;
+        width: 40%;
+        z-index: 1;
+        padding: 2em;
+        cursor: auto;
+        display: none;
+      } 
+      .dialog h2 {
+        font-family: 'Roboto', sans-serif;
+        font-size: 20px;
+        color: #ffff00;
+      }
+      .dialog p {
+        font-family: 'Roboto Condensed', sans-serif;
+        font-size: 18px;
+        color: #fff;
       }
       #game-score {
         font-family: 'Russo One', sans-serif;
@@ -61,6 +99,13 @@
 	</head>
 	<body>
     <div id="pacman-3d">
+      <button id="help-button" onclick="var dialog = document.getElementById('help-dialog'); dialog.style.display = 'block';">HELP</button>
+      <div id="help-dialog" class="dialog">
+        <h2>CONTROLS WITH KEYBOARD</h2>
+        <p>Press C to change camera view.<p>
+        <p>Pacman movement: Use W/S to move forward/backward and A/D to turn left/right.</p>
+        <button onclick="var dialog = document.getElementById('help-dialog'); dialog.style.display = 'none';">CLOSE</button>
+      </div>
       <div id="game-score"></div>
       <div id="lifes-counter"></div>
       <div id="sound-icon"></div>
