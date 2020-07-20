@@ -145,14 +145,23 @@ Esta função foi alterada com o objetivo de introduzir um mapeamento de textura
 Mudou-se o formato do objeto para um cubo. Assim, definiu-se as functions vertexShader2() (aqui calcula-se onde os pontos do nosso mesh deverão ser colocados) e fragmentShader2() (função que será aplicada em cada fragmento do mesh para colori-los), sendo o código GLSL escrito dentro de uma string, e a variavel uniforms para criar o objeto THREE.ShaderMaterial().
 
 ### :three: Tarefa 3
-///// Comentando as funções que começaram a ser implementadas
+A conclusão do projeto foi realizada nessa tarefa, onde foi dada continuidade para a implementação do jogo PacMan propriamente dito, a partir da reutilização das cenas construídas em Three.JS nas atividades anteriores. A lógica desenvolvida seguiu a proposta do jogo oficial - a interação principal se dá a partir do movimento do objeto pacman a partir das teclas A/D - rotações a esquerda e a direita - e W/S - deslocamentos para frente e para trás. Além disso, é possível controlar os sons adicionados ao jogo (mutá-los ou não a partir de um ícone clicável em tela) e também alternar o posicionamento da câmera entre uma visão em primeira pessoa - FPV e uma visão superior de todo o labirinto.
+
+Além de conceitos da biblioteca Three.JS, muitos conceitos de JavaScript foram estudados e aplicados para a finalização da ideia proposta inicialmente para o projeto. 
+
+Abaixo foram adicionados comentários tanto sobre as novas funções criadas quanto sobre as funções já existentes, porém modificadas nessa última tarefa.
 
 -- **`function reloadGame()`** 
 Função chamada sempre que `lost === true && lifesCounter === 0` ou `won === true && numDotsEaten === map.numDots`. Remove todos os objetos da cena de jogo e os reconstrói novamente para iniciar uma nova partida, chamando também a função `animateScene`, responsável pela atualização dos frames em cena. Também redefine as variáveis do jogo.
 
--- **`function createGamePerspectiveCamera()`** [alteração na função inicial / implementação incompleta] 
+-- **`function createGamePerspectiveCamera()`** 
+Alteração na implementação inicial da câmera perspectiva. Traz uma vista superior de todo o jogo, contemplando o labirinto completo. São definidos alguns atributos para a variável `camera` - `targetPosition`, `targetLookAt` e `lookAtPosition` - como vetores 3D a serem modificados no método `updateGamePerspectiveCamera` explicado a seguir. 
+Obs: Os `controls`, definidos por `OrbitControls`, foram retirados para facilitar o posicionamento da câmera para o usuário.
 
--- **`function updateGamePerspectiveCamera()`** [implementação incompleta] 
+-- **`function updateGamePerspectiveCamera()`** ????? 
+
+-- **`function createFirstPersonCamera()`** 
+Foi incrementado `listener = new THREE.AudioListener()` à `camera` para que fosse viável declarar `sound = new THREE.Audio(listener)` como variável a ser utilizada no decorrer de todo o código. Assim, foi possível acrescentar sons que caracterizassem ações particulares durante o jogo - todas mencionadas nas funções a seguir.
 
 -- **`function updateFirstPersonCamera()`** 
 Função já mencionada anteriormente. No entanto, ela foi aprimorada para cobrir os casos definidos abaixo.
@@ -169,6 +178,18 @@ camera.targetLookAt = pacman.position.clone().addScaledVector(pacman.direction, 
 ```
 
 O movimento da câmera (uso do método `lerp`), de sua posição no momento em que acontece `won === true` ou `lost === false` até a posição final definida nas descrições acima, acontece com uma velocidade mais lenta do que o movimento padrão (durante o jogo com o pacman) - `cameraSpeed = (lost || won) ? 1 : 10`.
+
+-- **`function createSoundIcon()`** 
+Função que adiciona à `div` com 'id' #sound-icon presente no código HTML uma tag `img` com atributo 'src' correspondente ao path que carrega o ícone de 'sound on' na tela principal do jogo. 
+
+-- **`function addOnClickSoundIcon()`** 
+A partir do código mencionado abaixo, é possível adicionar um escutador de eventos à `div`com id #sound-icon, para que esse chame o método `changeSoundIcon` sempre que houver um clique nesse elemento HTML. Função `addOnClickSoundIcon` chamada assim que a cena principal é carregada.
+```js
+document.getElementById('sound-icon').addEventListener('click', changeSoundIcon);
+```
+
+-- **`function changeSoundIcon()`** 
+Adiciona um novo ícone em tela - 'sound on' ou 'sound off' a partir da modificação do atributo 'src' da tag `img` anteriormente mencionada. Também modifica a variável `muted` que controla por todo o código se os sons serão ou não carregados para determinadas ações. 
 
 -- **`function createGameScore()`** && -- **`function createLifesCounter()`** 
 Funções que inicializam o placar do jogo e a quantidade de vidas, respectivamente. A partir do JavaScript, são buscados os elementos correspondentes a partir do seu 'id' - #game-score e #lifes-counter - e inseridos então dinamicamente na árvore de elementos HTML - DOM. Assim, com o carregamento da cena, as `divs` correspondentes são rendezidas a partir do código dos métodos `createGameScore` e `createLifesCounter`.
@@ -210,18 +231,62 @@ Obs: A propriedade `hasLimit` foi adicionada tanto ao 'pacman' quanto aos 'ghost
 -- **`function getObjAtMap(map, pos)`** 
 Retorna o objeto no mapa `map`, representado na posição `[y][x] = [Math.round(pos.y)][Math.round(pos.x)]`.
 
-VER SE ROLA DE USAR SÓ UMA DELAS - makeInvisibleObjAtMap ou removeObjAtMap
 -- **`function makeInvisibleObjAtMap(map, pos)`** 
-A partir do atributo `pos`, torna a propriedade `visible = false` do objeto no mapa para essa posição.
+A partir do atributo `pos`, torna a propriedade `visible = false` do objeto no mapa para essa posição. Método utilizado para tornar os objetos dot e bigDot invisíveis assim que são comidos pelo objeto pacman.
 
--- **`function removeObjAtMap()`** ??? 
+-- **`function removeObjAtMap()`** ??????? 
 
 -- **`function isWall(map, pos)`** 
 Verifica se a posição `pos` como argumento é válida no mapa e retorna o objeto correpondente a partir da função `getObjAtMap`. Assim, é possível avaliar se o objeto `obj` é uma 'WallMaze' ao verificar a propriedade `obj.isWall`.
 
--- **`function movePacman()`** ??? 
+-- **`function movePacman()`** 
+Função já mencionada em tarefa anterior, no entanto, novas implementações foram adicionadas. 
 
--- **`function updatePacman(now)`** ??? 
+Para garantir que o movimento do pacman seja limitado apenas aos caminhos livres do labirinto, calculou-se a cada posição do objeto pacman suas extremidades e verificou-se se essas posições correspondem a paredes do labirinto.
+```js
+// posições periféricas (à esquerda, à direita, a frente e atrás) com base em sua posição central - pacman.position - e na adição de um vetor escalar com base no raio e na direção analisada
+var leftSide = pacman.position.clone().addScaledVector(LEFT, PACMAN_RADIUS).round();
+var rightSide = pacman.position.clone().addScaledVector(RIGHT, PACMAN_RADIUS).round();
+var topSide = pacman.position.clone().addScaledVector(TOP, PACMAN_RADIUS).round();
+var bottomSide = pacman.position.clone().addScaledVector(BOTTOM, PACMAN_RADIUS).round();
+
+// verifica, a partir do método isWall() já descrito, se a posição correspondente se choca com um objeto 'wall' - se sim, mantém o pacman em uma posição que não a ultrapasse, simulando um bloqueio de passagem do objeto pacman
+if (isWall(map, leftSide)) 
+  pacman.position.x = leftSide.x + 0.5 + PACMAN_RADIUS;
+if (isWall(map, rightSide)) 
+  pacman.position.x = rightSide.x - 0.5 - PACMAN_RADIUS;
+if (isWall(map, topSide)) 
+  pacman.position.y = topSide.y - 0.5 - PACMAN_RADIUS;
+if (isWall(map, bottomSide)) 
+  pacman.position.y = bottomSide.y + 0.5 + PACMAN_RADIUS;
+```
+
+A partir da posição do pacman, foi examinado se existe algum objeto nessa mesma posição com `var obj = getObjAtMap(map, pacman.position)`. Caso `obj` seja dot ou bigDot, significa que o pacman está passando por esse objeto, ou seja, irá comê-lo.
+```js
+// verifica se o objeto retornado pela posição do pacman é dot e se ainda não foi comido
+if (obj && obj.isDot === true && obj.visible === true) {
+  // torna o objeto invisível e atualiza o score do jogo
+  makeInvisibleObjAtMap(map, pacman.position);
+  numDotsEaten += 1;
+  updateGameScore(5);
+
+  // código omitido - correspondente ao efeito sonoro
+}
+// atributo 'ateBigDot' permite deixar os fantasmas com medo, ou seja, definir como verdadeiro o atributo 'isAfraid' das variáveis ghost presentes no jogo - torna-os vulneráveis para serem comidos pelo pacman em um intervalo de tempo definido na função 'updateGhost'
+pacman.ateBigDot = false;
+// verifica se o objeto retornado pela posição do pacman é bigDot e se ainda não foi comido
+if (obj && obj.isBigDot === true && obj.visible === true) {
+  // torna o objeto invisível e atualiza o score do jogo
+  makeInvisibleObjAtMap(map, pacman.position);
+  pacman.ateBigDot = true;
+  updateGameScore(10);
+
+  // código omitido - correspondente ao efeito sonoro
+}
+```
+
+-- **`function updatePacman(now)`** ???
+Função que implementa as possíveis ações do pacman durante a partida.
 
 -- **`function showGhostAtMap(now)`** 
 Função que faz surgir um fantasma a cada intervalo de tempo definido até que se atinja a quantidade máxima de 4 fantasmas estipulada para o jogo. O mapa, representado na variável `LEVEL`, foi modificado para que exista apenas uma posição inicial de surgimento de um fantasma, salva então em `map.ghostSkeleton` assim que o método `createMap(LEVEL)` é executado. 
