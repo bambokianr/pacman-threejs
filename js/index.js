@@ -297,7 +297,8 @@ function initGame() {
     keys = createKeyState(); 
     map = createMap(LEVEL);
     pacman = createPacman(map.pacmanSkeleton);
-    // createHudCamera();
+    createSoundIcon();
+    addOnClickSoundIcon();
     createLifesCounter();
     createGameScore();
     animateScene();
@@ -432,14 +433,30 @@ function changeCameraView() {
   } else cancelChangeCamera = false;
 }
 
-function muteSound() {
-  if (keys['M']) {
-    if (!cancelMuted) {
-      if (muted) muted = false;
-      else muted = true;
-      cancelMuted = true;
-    }
-  } else cancelMuted = false;
+function createSoundIcon() {
+  var soundIconContainer = document.getElementById('sound-icon');
+  var icon = document.createElement('img');
+  icon.src = './sound1.svg';
+  icon.className = 'icon-img';
+  soundIconContainer.appendChild(icon);
+}
+
+function addOnClickSoundIcon() {
+  document.body.addEventListener('keypress', passToNextScene);
+  document.getElementById('sound-icon').addEventListener('click', changeSoundIcon);
+}
+
+function changeSoundIcon() {
+  var iconImg = document.getElementsByClassName('icon-img')[0];
+  const nameIcon = iconImg.src.slice(iconImg.src.length - 10, iconImg.src.length);
+  const newIcon = nameIcon === 'sound1.svg' ? './sound2.svg' : './sound1.svg';
+  iconImg.src = newIcon;
+  
+  if (!cancelMuted) {
+    if (muted) muted = false;
+    else muted = true;
+    cancelMuted = true;
+  }
 }
 
 function createGameScore() {
@@ -962,10 +979,11 @@ function animateScene() {
     }
   } else {
     var now = window.performance.now() / 1000;
+    cancelMuted = false;
+
     if (cameraFP) updateFirstPersonCamera();
     else updateGamePerspectiveCamera();
     changeCameraView();
-    muteSound();
     animateMouthPacman();
     showGhostAtMap(now);
     updatePacman(now);
