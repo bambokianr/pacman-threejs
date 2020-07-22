@@ -286,7 +286,7 @@ if (obj && obj.isBigDot === true && obj.visible === true) {
 }
 ```
 
--- **`function updatePacman(now)`** ???
+-- **`function updatePacman(now)`** 
 Função que implementa as possíveis ações do pacman durante a partida, recebendo como parâmetro de entrada a variável `now`, definida por `window.performance.now() / 1000` no método `animateScene`, significando o tempo transcorrido desde que a cena principal foi carregada. 
 Executa `movePacman` caso `won === false && lost === false`. 
 Se `numDotsEaten === map.numDots`, venceu-se o jogo. Assim, atribui-se a variável `wonTime` o valor de `now` no exato momento em que `won` se torna verdade. Com isso, define-se um intervalo de 3 segundos assim que `won = true` para a execução da animação final da partida após o jogador vencer e, ao fim desse intervalo - ou seja, `if (won && now - wonTime > 3)`, é executado `reloadGame` para que uma nova partida comece. 
@@ -313,6 +313,41 @@ if (numGhosts >= 0 && numGhosts < 4 && now - ghostCreationTime > 8) {
 }
 ```
 
--- **`function moveGhost(ghost)`** ???? 
+-- **`function moveGhost(ghost)`** 
+Aplica movimentos aleatórios a cada `ghost` em cena. São declaradas as variáveis `previousPosition`, `currentPosition`, `leftTurn` e `rightTurn` como vetores tridimensionais tanto para definir as posições anterior e atual (antes e depois da translação do objeto no eixo) quanto para as possíveis rotacionadas à esquerda e à direita. O trecho de código abaixo demonstra o que foi comentado. 
+```js
+// posição do fantasma com a adição de um vetor escalar com base na direção analisada - para previousPosition e currentPosition
+// também aplica-se a translação do fantasma com base em sua GHOST_SPEED
+previousPosition.copy(ghost.position).addScaledVector(ghost.direction, 0.5).round();
+ghost.translateOnAxis(ghost.direction, delta * GHOST_SPEED);
+currentPosition.copy(ghost.position).addScaledVector(ghost.direction, 0.5).round();
 
--- **`function updateGhost(ghost, now)`** ???? 
+// código omitido 
+
+// possíveis direções tanto à esquerda quanto à direita da direção atual do fantasma, aplicando-se rotações de 90 graus
+leftTurn.copy(ghost.direction).applyAxisAngle(UP, Math.PI / 2);
+rightTurn.copy(ghost.direction).applyAxisAngle(UP, -Math.PI / 2);
+```
+A partir daí, verifica se é possível alterar a direção do objeto caso não exista parede na esquerda, na direita ou em sua frente. Após descobrir as possibilidades, é determinada então randomicamente a direção final do fantasma em questão. O código abaixo explicita detalhadamente. 
+```js
+var forwardWall = isWall(map, currentPosition);
+var leftWall = isWall(map, currentPosition.copy(ghost.position).add(leftTurn));
+var rightWall = isWall(map, currentPosition.copy(ghost.position).add(rightTurn));
+
+// se não existe alguma das paredes laterais, então é permitido virar 90 graus para a esquerda ou para a direita
+if (!leftWall || !rightWall) {
+  var possibleTurns = [];
+  if (!forwardWall) possibleTurns.push(ghost.direction);
+  if (!leftWall) possibleTurns.push(leftTurn);
+  if (!rightWall) possibleTurns.push(rightTurn);
+
+  // depois de definir o vetor possibleTurns, escolhe-se aleatoriamente um de seus índices e então atribui-se a variável newDirection e a ghost.direction
+  var newDirection = possibleTurns[Math.floor(Math.random() * possibleTurns.length)];
+  ghost.direction.copy(newDirection);
+
+  // definir o fantasma numa posição inteira e seguir com a movimentação em uma nova direção
+  ghost.position.round().addScaledVector(ghost.direction, delta);
+}
+``` 
+
+-- **`function updateGhost(ghost, idxGhost, now, frames)`** 

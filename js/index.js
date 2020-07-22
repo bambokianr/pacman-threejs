@@ -825,7 +825,6 @@ function moveGhost(ghost) {
   ghost.translateOnAxis(ghost.direction, delta * GHOST_SPEED);
   currentPosition.copy(ghost.position).addScaledVector(ghost.direction, 0.5).round();
 
-  // ??? verifica se a posição anterior não é igual a atual - se não está "encurralado"?
   if (!currentPosition.equals(previousPosition)) {
     leftTurn.copy(ghost.direction).applyAxisAngle(UP, Math.PI / 2);
     rightTurn.copy(ghost.direction).applyAxisAngle(UP, -Math.PI / 2);
@@ -834,9 +833,7 @@ function moveGhost(ghost) {
     var leftWall = isWall(map, currentPosition.copy(ghost.position).add(leftTurn));
     var rightWall = isWall(map, currentPosition.copy(ghost.position).add(rightTurn));
 
-    // ??? não existe parede lateral, então pode virar 90 graus tanto para a esquerda quanto para a direita
     if (!leftWall || !rightWall) {
-      // ??? se o fantasma puder girar, escolha aleatoriamente um das direções possíveis
       var possibleTurns = [];
       if (!forwardWall) possibleTurns.push(ghost.direction);
       if (!leftWall) possibleTurns.push(leftTurn);
@@ -845,7 +842,6 @@ function moveGhost(ghost) {
       var newDirection = possibleTurns[Math.floor(Math.random() * possibleTurns.length)];
       ghost.direction.copy(newDirection);
 
-      // ??? posicionar o fantasma numa posição inteira e seguir com a movimentação em uma nova direção
       ghost.position.round().addScaledVector(ghost.direction, delta);
     }
   }
@@ -906,11 +902,9 @@ function updateGhost(ghost, idxGhost, now, frames) {
       lostTime = now;
 
       if (lost && lifesCounter > 0) {
-        // !!! [TODO] MOSTRAR AVISO DE YOU DIED
         console.log('[GAME] YOU DIED!');
       }
       else {
-        // !!! [TODO] MOSTRAR AVISO DE GAME OVER E RESETAR CENA
         console.log('[GAME] GAME OVER!');
         reloadGame();
       }
