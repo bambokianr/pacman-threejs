@@ -234,7 +234,8 @@ Retorna o objeto no mapa `map`, representado na posição `[y][x] = [Math.round(
 -- **`function makeInvisibleObjAtMap(map, pos)`** 
 A partir do atributo `pos`, torna a propriedade `visible = false` do objeto no mapa para essa posição. Método utilizado para tornar os objetos dot e bigDot invisíveis assim que são comidos pelo objeto pacman.
 
--- **`function removeObjAtMap()`** ??????? 
+-- **`function removeObjAtMap()`** 
+Função que remove da cena todos objetos presentes no vetor `toRemove`. O método é chamado em `animateScene`, para que, assim que um objeto seja adicionado ao vetor mencionado, esse já seja eliminado tanto da cena quanto do próprio `toRemove`.
 
 -- **`function isWall(map, pos)`** 
 Verifica se a posição `pos` como argumento é válida no mapa e retorna o objeto correpondente a partir da função `getObjAtMap`. Assim, é possível avaliar se o objeto `obj` é uma 'WallMaze' ao verificar a propriedade `obj.isWall`.
@@ -286,7 +287,19 @@ if (obj && obj.isBigDot === true && obj.visible === true) {
 ```
 
 -- **`function updatePacman(now)`** ???
-Função que implementa as possíveis ações do pacman durante a partida.
+Função que implementa as possíveis ações do pacman durante a partida, recebendo como parâmetro de entrada a variável `now`, definida por `window.performance.now() / 1000` no método `animateScene`, significando o tempo transcorrido desde que a cena principal foi carregada. 
+Executa `movePacman` caso `won === false && lost === false`. 
+Se `numDotsEaten === map.numDots`, venceu-se o jogo. Assim, atribui-se a variável `wonTime` o valor de `now` no exato momento em que `won` se torna verdade. Com isso, define-se um intervalo de 3 segundos assim que `won = true` para a execução da animação final da partida após o jogador vencer e, ao fim desse intervalo - ou seja, `if (won && now - wonTime > 3)`, é executado `reloadGame` para que uma nova partida comece. 
+Para o caso em que `lost === true` e ainda existem vidas (`lifesCounter > 0`), após um intervalo de 3 segundos assim que `lost = true` (depois da animação executada sobre o pacman, descrita a seguir), o objeto pacman é reinicializado em sua posição inicial da partida e variáveis são redefinidas, tais como, `lost = false` e `pacman.distanceMoved = 0`. 
+Por fim, a animação que indica o pacman perdendo uma vida foi implementada conforme o trecho de código a seguir: 
+```js
+if (lost) {
+  var angle = (now - lostTime) * Math.PI / 2;
+  var frame = Math.min(pacman.frames.length - 1, Math.floor(angle / Math.PI * pacman.frames.length));
+
+  pacman.geometry = pacman.frames[frame];
+}
+``` 
 
 -- **`function showGhostAtMap(now)`** 
 Função que faz surgir um fantasma a cada intervalo de tempo definido até que se atinja a quantidade máxima de 4 fantasmas estipulada para o jogo. O mapa, representado na variável `LEVEL`, foi modificado para que exista apenas uma posição inicial de surgimento de um fantasma, salva então em `map.ghostSkeleton` assim que o método `createMap(LEVEL)` é executado. 

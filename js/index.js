@@ -775,7 +775,6 @@ function updatePacman(now) {
     pacman.distanceMoved = 0;     
   }
 
-  //?? se o pacman for comido, mostra animação dele morrendo
   if (lost) {
     var angle = (now - lostTime) * Math.PI / 2;
     var frame = Math.min(pacman.frames.length - 1, Math.floor(angle / Math.PI * pacman.frames.length));
