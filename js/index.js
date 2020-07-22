@@ -88,39 +88,6 @@ var numDotsEaten = 0;
 var sound;
 var muted = false;
 var cancelMuted = false;
-var LEVELTEST = [
-  '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
-  '#                         # #                         #',
-  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
-  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
-  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
-  '#                                                     #',
-  '#   # # # #   # #   # # # # # # # #   # #   # # # #   #',
-  '#   # # # #   # #   # # # # # # # #   # #   # # # #   #',
-  '#             # #         # #         # #             #',
-  '# # # # # #   # # # # #   # #   # # # # #   # # # # # #',
-  '          #   # # # # #   # #   # # # # #   #          ',
-  '          #   # #         G           # #   #          ',
-  '          #   # #   # # # # # # # #   # #   #          ',
-  '# # # # # #   # #   #             #   # #   # # # # # #',
-  '          . P       #             #                    ',
-  '# # # # # #   # #   #             #   # #   # # # # # #',
-  '          #   # #   # # # # # # # #   # #   #          ',
-  '          #   # #                     # #   #          ',
-  '          #   # #   # # # # # # # #   # #   #          ',
-  '# # # # # #   # #   # # # # # # # #   # #   # # # # # #',
-  '#                         # #                         #',
-  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
-  '#   # # # #   # # # # #   # #   # # # # #   # # # #   #',
-  '#       # #                                 # #       #',
-  '# # #   # #   # #   # # # # # # # #   # #   # #   # # #',
-  '# # #   # #   # #   # # # # # # # #   # #   # #   # # #',
-  '#             # #         # #         # #             #',
-  '#   # # # # # # # # # #   # #   # # # # # # # # # #   #',
-  '#   # # # # # # # # # #   # #   # # # # # # # # # #   #',
-  '#                                                     #',
-  '# # # # # # # # # # # # # # # # # # # # # # # # # # # #'
-];
 var LEVEL = [
   '# # # # # # # # # # # # # # # # # # # # # # # # # # # #',
   '# . . . . . . . . . . . . # # . . . . . . . . . . . . #',
@@ -851,12 +818,10 @@ function updateGhost(ghost, idxGhost, now, frames) {
   moveGhost(ghost);
   animateFloatGhost(ghost);
 
-  // ??? remove todos os ghosts do vetor para que possa ser contabilizado novamente em livesCounter caso um ghost que já comeu o pacman coma-o de novo
   if (frames % 50 === 0) {
     whoAte = [];
   }
 
-  // ??? se o pacman comer um bigDot - os fantasmas ficam com medo
   if (pacman.ateBigDot === true) {
     ghost.isAfraid = true;
     ghost.becameAfraidTime = now;
@@ -864,14 +829,12 @@ function updateGhost(ghost, idxGhost, now, frames) {
     ghost.children[1].material.color = new THREE.Color(0xFFFFFF);
   }
 
-  // ??? fantasmas não tem mais medo depois de 10 segundos
   if (ghost.isAfraid && now - ghost.becameAfraidTime > 10) {
     ghost.isAfraid = false;
     ghost.children[0].material.color = new THREE.Color(colorsGhost[idxGhost]);
     ghost.children[1].material.color = new THREE.Color(colorsGhost[idxGhost]);
   }
 
-  // ??? checar a colisão entre pacman e fantasma
   var difference = new THREE.Vector3();
   difference.copy(pacman.position).sub(ghost.position);
 

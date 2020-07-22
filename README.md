@@ -351,3 +351,53 @@ if (!leftWall || !rightWall) {
 ``` 
 
 -- **`function updateGhost(ghost, idxGhost, now, frames)`** 
+Função que implementa as possíveis ações de cada fantasma durante a partida. Executa os métodos `moveGhost` e `animateFloatGhost`. 
+Também define o atributo `ghost.isAfraid = true` caso o pacman coma um `bigDot`. Com isso, todos os fantasmas presentes em cena tornam-se brancos em coloração e, por 10 segundos, ficam vulneráveis - podem ser comidos pelo pacman. O código abaixo demonstra com mais detalhes o que foi descrito.
+```js
+// caso o pacman coma um bigDot, o fantasma fica com medo e torna-se vulnerável
+if (pacman.ateBigDot === true) {
+  ghost.isAfraid = true;
+  ghost.becameAfraidTime = now;
+  ghost.children[0].material.color = new THREE.Color(0xFFFFFF);
+  ghost.children[1].material.color = new THREE.Color(0xFFFFFF);
+}
+
+// por 10 segundos desde que ghost.becameAfraidTime, é válido que ghost.isAfraid = true
+// depois disso, é restaurado seu comportamento e sua coloração inicial 
+if (ghost.isAfraid && now - ghost.becameAfraidTime > 10) {
+  ghost.isAfraid = false;
+  ghost.children[0].material.color = new THREE.Color(colorsGhost[idxGhost]);
+  ghost.children[1].material.color = new THREE.Color(colorsGhost[idxGhost]);
+}
+
+var difference = new THREE.Vector3();
+difference.copy(pacman.position).sub(ghost.position);
+
+// checa se há colisão entre o pacman e o fantasma - caso a distância entre seus centros seja menor que a soma de seus raios
+if (!lost && !won && difference.length() < PACMAN_RADIUS + GHOST_RADIUS) {
+  // caso o fantasma esteja com medo, ele é removido de cena
+  // caso contrário, o pacman é quem perde uma vida e reinicia sua posição
+  if (ghost.isAfraid === true) {
+    var toRemoveFiltered = toRemove.filter(item => item === ghost);
+    if (toRemoveFiltered.length === 0) {
+      numGhosts -= 1;
+      toRemove.push(ghost);
+    }
+  } else {
+    var whoAteFiltered = whoAte.filter(item => item === ghost);
+    if (whoAteFiltered.length === 0) {
+      updateLifesCounter();
+      whoAte.push(ghost);
+
+     // código omitido - correspondente ao efeito sonoro
+    }
+    
+    lost = true;
+    lostTime = now;
+
+   // mais códigos omitidos
+  }
+}
+``` 
+Por fim, as variáveis `lost` e `lifesCounter` são verificadas para que seja possível executar `reloadGame` quando necessário - com 'game over'.
+
