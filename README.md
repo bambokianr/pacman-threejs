@@ -242,7 +242,6 @@ Verifica se a posição `pos` como argumento é válida no mapa e retorna o obje
 
 -- **`function movePacman()`** 
 Função já mencionada em tarefa anterior, no entanto, novas implementações foram adicionadas. 
-
 Para garantir que o movimento do pacman seja limitado apenas aos caminhos livres do labirinto, calculou-se a cada posição do objeto pacman suas extremidades e verificou-se se essas posições correspondem a paredes do labirinto.
 ```js
 // posições periféricas (à esquerda, à direita, a frente e atrás) com base em sua posição central - pacman.position - e na adição de um vetor escalar com base no raio e na direção analisada
