@@ -11,6 +11,9 @@ _Resultado da Tarefa 1_
 ![til](./pacmangif_tarefa2.gif)
 _Resultado da Tarefa 2_
 
+![til](./pacmangif_tarefa3.gif)
+_Resultado da Tarefa 3_
+
 
 ### :one: Tarefa 1
 Nesta primeira parte do projeto - Tarefa 1, objetivou-se, inicialmente, familiarizar-se com a biblioteca Three.js e suas funcionalidades para além da linguagem JavaScript. Após isso, a fim de aplicar os conceitos aprendidos, utilizou-se o já tradicional jogo Pacman para realizarmos implementações em tópicos relacionados à disciplina de Computação Gráfica, focando principalmente na construção 3D do cenário e dos objetos, mais do que na lógica do jogo em si.
