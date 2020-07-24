@@ -2,6 +2,7 @@
 > Alunos: Gabriel Crestani e Rafaella Bambokian - COMP21
 
 Jogo PacMan 3D, na linguagem JavaScript - com base na biblioteca [Three.js](https://threejs.org/) - desenvolvido como projeto para a matéria CCI-36: Fundamentos de Computação Gráfica.
+O foco principal deste projeto é aprender os fundamentos básicos de computação gráfica através da utilização da biblioteca Three.js, biblioteca esta que permite a manipulação de primitivas 3D (cubos, esferas, vértices, arestas, etc), câmeras, viewports, iluminação, materiais, animação e outros recursos através da renderização no objeto CANVAS do HTM5, WebGL ou SVG.
 
 **Para acessar a demo, [clique aqui](https://bambokianr.github.io/pacman-threejs/).**
 
@@ -161,7 +162,25 @@ Função chamada sempre que `lost === true && lifesCounter === 0` ou `won === tr
 Alteração na implementação inicial da câmera perspectiva. Traz uma vista superior de todo o jogo, contemplando o labirinto completo. São definidos alguns atributos para a variável `camera` - `targetPosition`, `targetLookAt` e `lookAtPosition` - como vetores 3D a serem modificados no método `updateGamePerspectiveCamera` explicado a seguir. 
 Obs: Os `controls`, definidos por `OrbitControls`, foram retirados para facilitar o posicionamento da câmera para o usuário.
 
--- **`function updateGamePerspectiveCamera()`** ????? 
+-- **`function updateGamePerspectiveCamera()`**
+Esta função é chamada com o propósito de atualizar o ângulo da câmera (neste caso, uma câmera que enquadra todo o cenário em uma vista superior), para que tal ãngulo acompanhe a direção do pacman e proporcione uma jogabilidade mais natural. Primeiramente, a câmera é posicionada com uma vista superior e central ao mapa do jogo.
+```js
+camera.targetPosition.set(map.centerX, map.centerY, 30);
+camera.targetLookAt.set(map.centerX, map.centerY, 0);
+```
+Após isso, é calculado e atualizado o ângulo da câmera para que sua direção coincida com a do pacman. A variável `angleToRotate` representa o ângulo do pacman com relação ao seu sistema de coordenadas: o primeiro fator do cálculo dessa variável representa o ângulo em si, valor este que está entre (-π/2, π/2) dado que é resultado de um arco-tangente; o segundo fator é um ajuste devido a diferença de fase entre as orientações do pacman e da câmera.
+Dado que o valor desta variável está limitada entre (-π, 0) devido ao arco-tangente, os 4 if's implementados na sequência identificam o quadrante que o pacman se encontra e aplica uma rotação a mais para realizar essa correção.
+```js
+var angleToRotate = (Math.atan(pacman.direction.y / pacman.direction.x)) - Math.PI/2;
+if (pacman.direction.x >= 0 && pacman.direction.y >= 0)
+  camera.rotation.z += angleToRotate;
+else if (pacman.direction.x <= 0 && pacman.direction.y >= 0)
+  camera.rotation.z += angleToRotate + Math.PI;
+else if (pacman.direction.x <= 0 && pacman.direction.y <= 0)
+  camera.rotation.z += angleToRotate + Math.PI;
+else if (pacman.direction.x >= 0 && pacman.direction.y <= 0)
+  camera.rotation.z += angleToRotate + 2*Math.PI;
+```
 
 -- **`function createFirstPersonCamera()`** 
 Foi incrementado `listener = new THREE.AudioListener()` à `camera` para que fosse viável declarar `sound = new THREE.Audio(listener)` como variável a ser utilizada no decorrer de todo o código. Assim, foi possível acrescentar sons que caracterizassem ações particulares durante o jogo - todas mencionadas nas funções a seguir.
